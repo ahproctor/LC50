@@ -1,0 +1,17 @@
+Package: LC50
+Type: Package
+Title: Estimate LC50 in the presence of additional stressors
+Version: 0.1.1
+Date: 2015-07-31
+Author: Simon Wotherspoon and Abigael Proctor
+Maintainer: Abigael Proctor <Abigael.Proctor@aad.gov.au>
+Suggests:
+    multcomp
+Imports:
+    stats,
+    MASS
+Description: This is what it does.
+NeedsCompilation: no
+ByteCompile: yes
+License: GPL-3
+LazyData: TRUE
