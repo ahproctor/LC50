@@ -10,6 +10,32 @@
 NULL
 
 
+##' Simmulated toxicity data
+##'
+##' A simulated dataset showing individual survival following exposure
+##' to a known toxin in the presence of the additional stressors
+##' temperature and salinity.
+##'
+##' Samples of an aqueous solution of a toxin of known concentration
+##' and salinity were prepared, and held at constant
+##' temperature. Approximately 10 individuals were added to each
+##' sample and the number of survivors recorded at the end of four
+##' days exposure.
+##'
+##' @format A data frame with 225 rows and 8 variables:
+##' \describe{
+##'   \item{vial}{the replicate}
+##'   \item{temperature}{temperature of solution}
+##'   \item{salinity}{salinity of solution}
+##'   \item{group}{additinal stressor treatment groups}
+##'   \item{conc}{concentration of toxin in solution}
+##'   \item{total}{number of individuals in vial}
+##'   \item{alive}{number of survivors after 4 days}
+##'   \item{dead}{number of dead individuals after 4 days}
+##' }
+##'
+"toxicity"
+
 
 ##' Estimate LC50 from survival data in the presence of additional
 ##' stressors and non-ignorable control mortality

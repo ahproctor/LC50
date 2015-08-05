@@ -5,8 +5,10 @@ Version: 0.1.1
 Date: 2015-07-31
 Author: Simon Wotherspoon and Abigael Proctor
 Maintainer: Abigael Proctor <Abigael.Proctor@aad.gov.au>
+Depends: R(>= 2.10.0)
 Suggests:
-    multcomp
+    multcomp,
+    knitr
 Imports:
     stats,
     MASS
@@ -15,3 +17,4 @@ NeedsCompilation: no
 ByteCompile: yes
 License: GPL-3
 LazyData: TRUE
+VignetteBuilder: knitr
