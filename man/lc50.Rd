@@ -74,7 +74,7 @@ following components:
 \item{\code{df.residual}}{the residual degrees of freedom.}
 \item{\code{null.deviance}}{the ddeviance of the null model, which fits a single mortality rate to all data.}
 \item{\code{df.null}}{the degrees of freedom for the null model.}
-\item{\code{nlm}}{the result of the call to \code{nlm}.}
+\item{\code{optim}}{the result of the call to \code{optim}.}
 \item{\code{xlevels}}{a record of the levels of the factors used in fitting.}
 \item{\code{contrasts}}{the contrasts used.}
 \item{\code{call}}{the matched call.}

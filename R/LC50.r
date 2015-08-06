@@ -99,7 +99,7 @@ NULL
 ##' \item{\code{df.residual}}{the residual degrees of freedom.}
 ##' \item{\code{null.deviance}}{the ddeviance of the null model, which fits a single mortality rate to all data.}
 ##' \item{\code{df.null}}{the degrees of freedom for the null model.}
-##' \item{\code{nlm}}{the result of the call to \code{nlm}.}
+##' \item{\code{optim}}{the result of the call to \code{optim}.}
 ##' \item{\code{xlevels}}{a record of the levels of the factors used in fitting.}
 ##' \item{\code{contrasts}}{the contrasts used.}
 ##' \item{\code{call}}{the matched call.}
@@ -112,7 +112,7 @@ lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","lo
 
   ## Record call and link function
   cl <- match.call()
-  link <- match.arg()
+  link <- match.arg(link)
 
   ## Create the model frame and terms
   mf <- match.call(expand.dots = FALSE)
@@ -186,14 +186,14 @@ lc50.fit <- function(X,Y,conc,group,alpha,gamma,beta,link) {
     nll
   }
   ## Minimize negative log likelihood
-  mn <- nlm(nlogL,c(alpha,gamma,beta),hessian=TRUE)
+  mn <- optim(c(alpha,gamma,beta),nlogL,,method="BFGS",hessian=TRUE)
 
   ## Basic parameters
-  alpha <- mn$estimate[seq_len(ng)]
+  alpha <- mn$par[seq_len(ng)]
   names(alpha) <- levels(group)
-  gamma <- mn$estimate[ng+seq_len(ng)]
+  gamma <- mn$par[ng+seq_len(ng)]
   names(gamma) <- levels(group)
-  beta <- mn$estimate[-seq_len(2*ng)]
+  beta <- mn$par[-seq_len(2*ng)]
   names(beta) <- colnames(X)
   ## Covariance of the beta (is subset of inverse hessian)
   V <- ginv(mn$hessian)[-seq_len(2*ng),-seq_len(2*ng),drop=FALSE]
@@ -215,9 +215,9 @@ lc50.fit <- function(X,Y,conc,group,alpha,gamma,beta,link) {
   df.residual <- nrow(X)-(ncol(X)+ng)
   null.deviance <- -2*sum(dbinom(y,N,sum(y)/sum(N),log=T)-dbinom(y,N,y/N,log=T))
   df.null <- nrow(X)-(1+ng)
-  aic <- 2*(ncol(X)+2*ng+mn$minimum)
+  aic <- 2*(ncol(X)+2*ng+mn$value)
 
-  r <- list(logLik=-mn$minimum,
+  r <- list(logLik=-mn$value,
             aic=aic,
             alpha=alpha,
             gamma=gamma,
@@ -235,7 +235,7 @@ lc50.fit <- function(X,Y,conc,group,alpha,gamma,beta,link) {
             df.residual=df.residual,
             null.deviance=null.deviance,
             df.null=df.null,
-            nlm=mn)
+            optim=mn)
   class(r) <- "lc50"
   r
 }
