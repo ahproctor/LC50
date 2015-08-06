@@ -1,6 +1,6 @@
 ---
-title: "Vignette Title"
-author: "Vignette Author"
+title: "LC50"
+author: "A. Proctor and S Wotherspoon"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -9,50 +9,142 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+## Intro
 
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
 
-## Vignette Info
 
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
+## Model
 
-## Styles
+LC50 lethal concentrations for each combination of additional
+stressors are estimated by fitting a Binomial regression model that
+relates survival to log toxin concentration, adjusting for background
+mortality and assuming a linear relation between log LC50 and
+descriptors of the additional stressors.
 
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+More precisely, the a Binomial regression model parametrized in terms
+of log LC50 is used to relate survival to log toxin concentration
+$$
+\begin{align}
+	y_{ijk} &\sim \operatorname{Bin}(n_{ijk},\pi_{ij})\\
+	\pi_{ij} &=
+		\begin{cases}
+			p_{ij}q_{i} & C_{i} > 0\\
+			q_{i} & C_{i}= 0
+		\end{cases}\\
+	\ell_{1}(p_{ij}) &= \alpha_{i} (\log C_{ij} - \log\mathrm{LC50}_{i})\\
+	\log \mathrm{LC50}_{i} &= \beta_{0} + \beta_{1} x_{1i} + \dots + \beta_{m}x_{mi}\\
+	\ell_{2}(q_{i}) &= \gamma_{i}
+\end{align}
+$$
+Here $y_{ijk}$ is the number of survivors, $n_{ijk}$ is the total
+number of individuals and $\pi_{ij}$ is the fraction of individuals
+expected to survive in replicate $k$ receiving toxin concentration
+$C_{ij}$ and the $i^{\mathrm{th}}$ combination of additional
+stressors. The total survival fraction $\pi_{ij}$ is decomposed into a
+fraction $q_{i}$ of individuals expected to survive in the absence of
+the toxin, and a fraction $p_{ij}$ expected to survive the additional
+mortality induced by the toxin.  The fraction $p_{ij}$ is related to
+the log toxin concentration $\log C_{ij}$, the log lethal
+concentration $\log \mathrm{LC50}_{i}$ and a rate parameter
+$\alpha_{i}$ specific to the combination of stressors through a
+monotonic link function $\ell_{1}$ with the property that
+$\ell_{2}(1/2) = 0$, so that $p_{ij}=1/2$ when $C_{ij} =
+\mathrm{LC50}_{i}$.  Similarly, the baseline survival fraction $q_{i}$
+is related to a survival parameter $\gamma_{i}$ specific to the
+combination of stressors through a monotonic link function $\ell_{2}$.
+The lethal concentration $\mathrm{LC50}_{i}$ specific to a stressor
+combination is related through a log link to a linear predictor
+constructed from covariates $x_{1},x_{2},\ldots,x_{m}$ describing the
+combination of additional stressors.
 
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
+The baseline survival parameters $\gamma_{i}$ and rate parameters
+$\alpha_{i}$ are viewed as nuisance parameters, and inference focuses
+on the effects of the additional stressors and the LC50 lethal
+concentrations.
 
-## Figures
 
-The figure sizes have been customised so that you can easily put two images side-by-side. 
 
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
+## Example
+
+The `toxicity` dataset is simulated data showing survival following
+exposure to a known toxin in the presence of the additional stressors
+temperature and salinity.  In the imagined scenario,  samples of an
+aqueous solution of a toxin, of varying concentrations, are prepared
+for each of three salinities and are held at one of three constant
+temperatures.  Approximately 10 individuals were added to each sample
+and the number of survivors recorded at the end of four days exposure.
+```{r}
+library(LC50)
+head(toxicity)
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
 
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
+Plotting the survival fraction against concentration for each
+combination of additional stressors shows that survival does decrease
+with increasing concentrations of the toxin, and in many samples there
+is a non-neglible level of control mortality
+```{r,fig.width=7,fig.height=6}
+library(ggplot2)
+ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
+  geom_point()+
+  facet_grid(temperature~salinity)
 ```
 
-Also a quote using `>`:
+The LC50 lethal concentrations for each temperature and salinity
+combinationan be estimated with `lc50`.  This function fits the
+Binomial model described in the previous section by maximum
+likelihood.  The details of the model are specified by three
+arguments:
 
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
+* a formula, the left hand side of which is a two column matrix
+  constructed from the number of survivors and mortalities in each
+  sample, while the right hand side specifies the terms in the linear
+  predictor for log LC50
+
+* the `concentration` argument names the variable in the dataframe
+  recording the concentration of the toxin, and
+
+* the `group` argument names a factor in the dataframe that
+  disinguishes the combinations of additional stressors.  The model
+  requires that the terms of linear predictor for log LC50 are
+  constant within levels of this factor.
+
+```{r}
+fit <- lc50(cbind(alive,dead)~salinity*temperature,concentration=conc,group=group,data=toxicity)
+summary(fit)
+```
+
+An analysis of deviance table for the fit is constructed with `anova`.
+```{r}
+anova(fit,test="Chisq")
+```
+This table shows no evidence that log LC50 depends on the interaction,
+and the model can be simplified to a main effects only model for log
+LC50.  Although this fits a restricted model for log LC50, it still
+fits a separate control parameter $\gamma_{i}$ and rate parameter
+$\alpha_{i}$ for each group.
+```{r}
+fit <- lc50(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity)
+summary(fit)
+```
+
+
+Multiplicity adjust pairwise comparison tests can be constructed with
+`glht` from the `multcomp` package.
+```{r,warning=FALSE}
+library(multcomp)
+mc <- glht(fit,linfct=mcp(salinity="Tukey",temperature="Tukey"))
+summary(mc)
+```
+while `confint` gives multplicity adjusted confidence intervals for
+differences in log LC50
+```{r}
+confint(mc)
+```
+These are converted to confidence intervals for ratios of LC50s by
+taking exponentials
+```{r}
+exp(confint(mc)$confint)
+```
+
+
