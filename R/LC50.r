@@ -16,11 +16,11 @@ NULL
 ##' to a known toxin in the presence of the additional stressors
 ##' temperature and salinity.
 ##'
-##' Samples of an aqueous solution of a toxin of known concentration
-##' and salinity were prepared, and held at constant
-##' temperature. Approximately 10 individuals were added to each
-##' sample and the number of survivors recorded at the end of four
-##' days exposure.
+##' Samples of an aqueous solution of a toxin, of varying
+##' concentrations, are prepared for each of three salinities and are
+##' held at one of three constant temperatures.  Approximately 10
+##' individuals were added to each sample and the number of survivors
+##' recorded at the end of four days exposure.
 ##'
 ##' @format A data frame with 225 rows and 8 variables:
 ##' \describe{
@@ -57,6 +57,7 @@ NULL
 ##' @param start Starting values used to initialize the model.  If
 ##' \code{start=NULL} these parameters are determined by
 ##' \code{\link{lc50.initialize}}.
+##' @param link the link function for survival fractions
 ##' @param X a design matrix
 ##' @param Y a two column matrix of responses
 ##' @param conc a vector of toxin concentrations
@@ -80,9 +81,6 @@ NULL
 ##' An object of class "lc50" is a list containing at least the
 ##' following components:
 ##'
-##'
-##'
-##'
 ##' \item{\code{logLik}}{the maximized log likelihood.}
 ##' \item{\code{aic}}{Akaike's information criteria.}
 ##' \item{\code{alpha}}{a vector of rate coefficients.}
@@ -105,16 +103,16 @@ NULL
 ##' \item{\code{xlevels}}{a record of the levels of the factors used in fitting.}
 ##' \item{\code{contrasts}}{the contrasts used.}
 ##' \item{\code{call}}{the matched call.}
+##' \item{\code{link}}{the link function.}
 ##' \item{\code{terms}}{the terms object used.}
-##' \item{\code{terms}}{the terms object used.}
+##' \item{\code{model}}{the model frame.}
 ##'
 ##' @export
+lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit")) {
 
-
-lc50 <- function(formula,concentration,group,data,start=NULL) {
-
-  ## Record call
+  ## Record call and link function
   cl <- match.call()
+  link <- match.arg()
 
   ## Create the model frame and terms
   mf <- match.call(expand.dots = FALSE)
@@ -140,12 +138,13 @@ lc50 <- function(formula,concentration,group,data,start=NULL) {
   alpha <- start$alpha
   gamma <- start$gamma
   beta <- qr.solve(X,start$loglc50[group])
-  r <- lc50.fit(X,Y,conc,group,alpha,gamma,beta)
+  r <- lc50.fit(X,Y,conc,group,alpha,gamma,beta,link)
   r <- c(r,
          list(
            xlevels=.getXlevels(mt, mf),
            contrasts=attr(X,"contrasts"),
            call=cl,
+           link=link,
            terms=mt,
            model=mf))
   class(r) <- "lc50"
@@ -155,7 +154,7 @@ lc50 <- function(formula,concentration,group,data,start=NULL) {
 
 ##' @rdname lc50
 ##' @importFrom MASS ginv
-lc50.fit <- function(X,Y,conc,group,alpha,gamma,beta) {
+lc50.fit <- function(X,Y,conc,group,alpha,gamma,beta,link) {
 
   ## Decompose response
   y <- Y[,1]
@@ -167,9 +166,12 @@ lc50.fit <- function(X,Y,conc,group,alpha,gamma,beta) {
   k <- match(levels(group),group)
   Xg <- X[k,,drop=FALSE]
 
+  ## Select inverse link function
+  ilink <- switch(link,probit=pnorm,logit=plogis)
+
   fitted.pq <- function(alpha,gamma,beta) {
-    p <- pnorm(alpha[group]*(log(conc)-X%*%beta))
-    q <- pnorm(gamma[group])
+    p <- ilink(alpha[group]*(log(conc)-X%*%beta))
+    q <- ilink(gamma[group])
     ifelse(conc>0,p*q,q)
   }
 
@@ -248,16 +250,18 @@ lc50.fit <- function(X,Y,conc,group,alpha,gamma,beta) {
 ##' @param Y a two column matrix of the number of survivals and mortalities in each sample.
 ##' @param conc a vector of tixin concentrations
 ##' @param group a factor delineating treatment groups
+##' @param link  the link function for survival fractions
 ##' @return Return a list of with components
 ##' \item{\code{alpha}}{the rate parameter for each treatment group}
 ##' \item{\code{gamma}}{the probit of the control surival for each treatment group}
 ##' \item{\code{loglc50}}{the log lc50 for each treatment group}
 ##' @export
-lc50.initialize <- function(Y,conc,group) {
+lc50.initialize <- function(Y,conc,group,link=c("probit","logit")) {
+  link <- match.arg(link)
 
   init <- function(Y,conc) {
     X <- cbind(1,ifelse(conc>0,1,0),ifelse(conc>0,log(conc),0))
-    glm.fit(X,Y,family=binomial(link=probit))$coefficient
+    glm.fit(X,Y,family=binomial(link=link))$coefficient
   }
 
   cfs <- lapply(levels(group),function(g) init(Y[group==g,],conc[group==g]))
@@ -298,6 +302,7 @@ print.lc50 <- function(x,digits = max(3L, getOption("digits") - 3L),...) {
 ##' \item{\code{csurv}}{a table of control survival for each treatment group.}
 ##' @export
 summary.lc50 <- function(object,...) {
+
   keep <- match(c("call","deviance","aic","contrasts","df.residual","null.deviance","df.null"),names(object),0L)
   cf <- object$coefficients
   cf.se <- sqrt(diag(object$cov.scaled))
@@ -311,9 +316,10 @@ summary.lc50 <- function(object,...) {
   lc50.table <- cbind(loglc50, loglc50.se, exp(loglc50), exp(loglc50-1.96*loglc50.se), exp(loglc50+1.96*loglc50.se))
   dimnames(lc50.table) <- list(names(loglc50), c("Estimate","Std. Error", "LC50", "Lwr 95%", "Upr 95%"))
 
+  ilink <- switch(object$link,probit=pnorm,logit=plogis)
   gamma <- object$gamma
   gamma.se <- sqrt(diag(object$gamma.cov))
-  csurv.table <- cbind(gamma,gamma.se,pnorm(gamma),pnorm(gamma-1.96*gamma.se),pnorm(gamma-1.96*gamma.se))
+  csurv.table <- cbind(gamma,gamma.se,ilink(gamma),ilink(gamma-1.96*gamma.se),ilink(gamma-1.96*gamma.se))
   dimnames(csurv.table) <- list(names(gamma), c("Estimate","Std. Error", "C Surv", "Lwr 95%", "Upr 95%"))
 
   r <- c(list(coefficients=coef.table,
@@ -405,7 +411,7 @@ anova.lc50 <- function(object,...,test = NULL)  {
       beta <- object$coefficients[varseq<i]
       fit <- eval(call("lc50.fit",X=x[,varseq<i,drop=FALSE],
                        Y=object$y,conc=object$concentration,group=object$group,
-                       alpha=object$alpha,gamma=object$gamma,beta=beta))
+                       alpha=object$alpha,gamma=object$gamma,beta=beta,link=object$link))
       resdev <- c(resdev, fit$deviance)
       resdf <- c(resdf, fit$df.residual)
     }

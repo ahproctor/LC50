@@ -24,11 +24,11 @@ to a known toxin in the presence of the additional stressors
 temperature and salinity.
 }
 \details{
-Samples of an aqueous solution of a toxin of known concentration
-and salinity were prepared, and held at constant
-temperature. Approximately 10 individuals were added to each
-sample and the number of survivors recorded at the end of four
-days exposure.
+Samples of an aqueous solution of a toxin, of varying
+concentrations, are prepared for each of three salinities and are
+held at one of three constant temperatures.  Approximately 10
+individuals were added to each sample and the number of survivors
+recorded at the end of four days exposure.
 }
 \keyword{datasets}
 

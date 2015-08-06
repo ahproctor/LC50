@@ -5,9 +5,10 @@
 \alias{lc50.fit}
 \title{Estimate LC50 for a toxin}
 \usage{
-lc50(formula, concentration, group, data, start = NULL)
+lc50(formula, concentration, group, data, start = NULL, link = c("probit",
+  "logit"))
 
-lc50.fit(X, Y, conc, group, alpha, gamma, beta)
+lc50.fit(X, Y, conc, group, alpha, gamma, beta, link)
 }
 \arguments{
 \item{formula}{a formula relating log LC50 to covariates
@@ -23,6 +24,8 @@ concentration of the toxin.}
 \item{start}{Starting values used to initialize the model.  If
 \code{start=NULL} these parameters are determined by
 \code{\link{lc50.initialize}}.}
+
+\item{link}{the link function for survival fractions}
 
 \item{X}{a design matrix}
 
@@ -53,9 +56,6 @@ coeffients.
 An object of class "lc50" is a list containing at least the
 following components:
 
-
-
-
 \item{\code{logLik}}{the maximized log likelihood.}
 \item{\code{aic}}{Akaike's information criteria.}
 \item{\code{alpha}}{a vector of rate coefficients.}
@@ -78,8 +78,9 @@ following components:
 \item{\code{xlevels}}{a record of the levels of the factors used in fitting.}
 \item{\code{contrasts}}{the contrasts used.}
 \item{\code{call}}{the matched call.}
+\item{\code{link}}{the link function.}
 \item{\code{terms}}{the terms object used.}
-\item{\code{terms}}{the terms object used.}
+\item{\code{model}}{the model frame.}
 }
 \description{
 Estimate LC50 from survival data in the presence of additional

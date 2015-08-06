@@ -4,7 +4,7 @@
 \alias{lc50.initialize}
 \title{Starting parameters for an LC50 model fit}
 \usage{
-lc50.initialize(Y, conc, group)
+lc50.initialize(Y, conc, group, link = c("probit", "logit"))
 }
 \arguments{
 \item{Y}{a two column matrix of the number of survivals and mortalities in each sample.}
@@ -12,6 +12,8 @@ lc50.initialize(Y, conc, group)
 \item{conc}{a vector of tixin concentrations}
 
 \item{group}{a factor delineating treatment groups}
+
+\item{link}{the link function for survival fractions}
 }
 \value{
 Return a list of with components
