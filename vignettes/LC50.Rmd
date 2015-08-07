@@ -1,4 +1,4 @@
----
+a---
 title: "LC50"
 author: "A. Proctor and S Wotherspoon"
 date: "`r Sys.Date()`"
@@ -78,17 +78,21 @@ library(LC50)
 head(toxicity)
 ```
 
+### Graphical Exploration
 
 Plotting the survival fraction against concentration for each
 combination of additional stressors shows that survival does decrease
 with increasing concentrations of the toxin, and in many samples there
-is a non-neglible level of control mortality
+is a non-negligible level of control mortality
 ```{r,fig.width=7,fig.height=6}
 library(ggplot2)
 ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
   geom_point()+
   facet_grid(temperature~salinity)
 ```
+
+
+### Model fitting
 
 The LC50 lethal concentrations for each temperature and salinity
 combinationan be estimated with `lc50`.  This function fits the
@@ -128,20 +132,78 @@ fit <- lc50(cbind(alive,dead)~salinity+temperature,concentration=conc,group=grou
 summary(fit)
 ```
 
+The table of lethal concentrations can be extracted from the summary and displayed graphically
+```{r,fig.width=7,fig.height=6}
+lc50 <- as.data.frame(summary(fit)$lc50)
+lc50 <- cbind(group=rownames(lc50),lc50)
+ggplot(lc50,aes(x=group,y=LC50))+
+  geom_linerange(mapping=aes(x=group,ymin=`Lwr 95%`,ymax=`Upr 95%`),col="dodgerblue1",lwd=3)+
+  geom_point()
+```
 
-Multiplicity adjust pairwise comparison tests can be constructed with
+Predictions from the fitted model can be generated with `predict`.
+```{r}
+d.pr <- expand.grid(temperature=factor(c(12,14,16)),
+                    salinity=factor(c(31,33,35)),
+                    conc=0:90)
+d.pr$group <- with(d.pr,interaction(temperature,salinity,sep="|"))
+d.pr$survival <- predict(fit,d.pr)
+ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
+  geom_point()+
+  geom_line(aes(x=conc,y=survival,colour=group),data=d.pr)+
+  facet_grid(temperature~salinity)
+```
+
+
+
+The confidence intervals shown in the summary are based on an
+asymptotic approximation and can be unreliable in small samples.  As
+an alternative, confidence intervals for the lethal concentrations can
+be calculated by parametric bootstrap - new data sets are simulated
+from the fitted model and the model refitted to the simulated data,
+confidence intervals are then derived from the variability seen in the
+estimates from the simulated data.
+
+```{r}
+d.boot <- toxicity
+boot <- lapply(simulate(fit,100),function(s) {
+  ## Update data
+  d.boot[,colnames(s)] <- s;
+  ## Refit model and extract lc50s
+  update(fit,data=d.boot,start=fit)})
+## Summaries of bootstrap estimates
+lc50 <- sapply(boot,function(fit) exp(fit$loglc50))
+t(apply(lc50,1,function(lc50) c(LC50=mean(lc50),quantile(lc50,c(0.025,0.975)))))
+```
+
+
+Confidence intervals for predictions can be generated similarly
+```{r}
+pr <- sapply(boot,function(fit) predict(fit,d.pr))
+d.pr <- cbind(d.pr,t(apply(pr,1,quantile,c(0.025,0.975))))
+ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
+  geom_point()+
+  geom_ribbon(aes(x=conc,y=survival,ymin=`2.5%`,ymax=`97.5%`,fill=group),data=d.pr,alpha=0.2,color=NA)+
+  geom_line(aes(x=conc,y=survival,colour=group),data=d.pr)+
+  facet_grid(temperature~salinity)
+```
+
+
+### Multiple Comparisons
+
+Multiplicity adjusted pairwise comparison tests can be constructed with
 `glht` from the `multcomp` package.
 ```{r,warning=FALSE}
 library(multcomp)
 mc <- glht(fit,linfct=mcp(salinity="Tukey",temperature="Tukey"))
 summary(mc)
 ```
-while `confint` gives multplicity adjusted confidence intervals for
-differences in log LC50
+Multplicity adjusted confidence intervals for
+differences in log LC50 can be obtained with `confint`
 ```{r}
 confint(mc)
 ```
-These are converted to confidence intervals for ratios of LC50s by
+These intervals can be converted to confidence intervals for ratios of LC50s by
 taking exponentials
 ```{r}
 exp(confint(mc)$confint)
