@@ -3,9 +3,9 @@
 \docType{package}
 \name{LC50-package}
 \alias{LC50-package}
-\title{Solar/Satellite Geolocation for Animal Tracking}
+\title{LC50 lethal concentrations in the presence of additional stressors.}
 \description{
-provides facilities for estimating lethal concentrations for a
+Provides facilities for estimating lethal concentrations for a
 toxin from destructively sampled survival data in the presence of
 additional stressors and non-ignorable control mortality.
 }
