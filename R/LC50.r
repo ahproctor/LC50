@@ -1,6 +1,6 @@
-#' Solar/Satellite Geolocation for Animal Tracking
+#' LC50 lethal concentrations in the presence of additional stressors.
 #'
-#' provides facilities for estimating lethal concentrations for a
+#' Provides facilities for estimating lethal concentrations for a
 #' toxin from destructively sampled survival data in the presence of
 #' additional stressors and non-ignorable control mortality.
 #'
@@ -10,7 +10,7 @@
 NULL
 
 
-##' Simmulated toxicity data
+##' Simulated toxicity data
 ##'
 ##' A simulated dataset showing individual survival following exposure
 ##' to a known toxin in the presence of the additional stressors
@@ -123,12 +123,12 @@ lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","lo
   mf <- eval(mf, parent.frame())
   mt <- attr(mf,"terms")
 
-  ## Extract concentrations
-  conc <- mf[,"(concentration)"]
-
   ## Create the model matrix and response
   X <- model.matrix(mt,mf)
   Y <- model.response(mf)
+
+  ## Extract concentrations
+  conc <- mf[,"(concentration)"]
 
   ## Determine the treatment groups
   group <- as.factor(mf[,"(group)"])
@@ -547,4 +547,59 @@ simulate.lc50 <- function(object, nsim=1, seed=NULL, ...) {
 }
 
 
+##' Predicted survival from a fitted LC50 object
+##'
+##' If \code{newdata} is omitted the predictions are based on the data
+##' used for the fit.  For \code{type="adjusted"}, it is assumed there
+##' is no background mortality and predictions are made based purely
+##' on the mortality due to the toxin.
+##'
+##' @title Predict method for LC50 fits
+##' @param object object an object of class \code{lc50}, obtained as the
+##' result of a call to \code{\link{lc50}}
+##' @param newdata optionally, a data frame in which to look for
+##' variables with which to predict. If omitted, the fitted linear
+##' predictors are used.
+##' @param type the type of prediction required. If
+##' \code{type="response"} predictions include both the background
+##' mortality and the mortality due to the toxin, but if
+##' \code{type="adjusted"} predictions only reflect mortality due to
+##' the toxin.
+##' @param ... further arguments passed to or from other methods.
+##' @return a vector of predicted survival fractions.
+##' @export
+predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...) {
+
+  type <- match.arg(type)
+
+  ## Get model frame and design matrix
+  if (missing(newdata) || is.null(newdata)) {
+    mf <- object$model
+    X <- object$x
+  } else {
+    mt <- delete.response(object$terms)
+    mf <- substitute(model.frame(mt,newdata,xlev=object$xlevels,concentration=concentration,group=group),
+                     as.list(object$call[c("concentration","group")]))
+    mf <- eval(mf)
+    X <- model.matrix(mt,mf,contrasts.arg=object$contrasts)
+  }
+
+  ## Extract concentrations
+  conc <- mf[,"(concentration)"]
+
+  ## Determine the treatment groups
+  group <- factor(mf[,"(group)"],levels(object$group))
+
+  alpha <- object$alpha
+  beta <- object$coefficients
+  gamma <- object$gamma
+
+  ## Select inverse link function
+  ilink <- switch(object$link,probit=pnorm,logit=plogis)
+
+  ## Predict survival fraction
+  p <- ilink(alpha[group]*(log(conc)-X%*%beta))
+  q <- if(type=="adjusted") 1 else ilink(gamma[group])
+  ifelse(conc>0,p*q,q)
+}
 
