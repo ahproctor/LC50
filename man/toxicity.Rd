@@ -3,7 +3,7 @@
 \docType{data}
 \name{toxicity}
 \alias{toxicity}
-\title{Simmulated toxicity data}
+\title{Simulated toxicity data}
 \format{A data frame with 225 rows and 8 variables:
 \describe{
   \item{vial}{the replicate}
