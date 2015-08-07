@@ -3,12 +3,14 @@ Type: Package
 Title: Estimate LC50 in the presence of additional stressors
 Version: 0.1.1
 Date: 2015-07-31
-Author: Simon Wotherspoon and Abigael Proctor
-Maintainer: Abigael Proctor <Abigael.Proctor@aad.gov.au>
-Depends: R(>= 2.10.0)
+Authors@R: as.person(c(
+    "Abigael Proctor <Abigael.Proctor@aad.gov.au> [aut, cre]",
+    "Simon Wotherspoon <Simon.Wotherspoon@utas.edu.au> [aut]"))
+Depends: R(>= 3.0.1)
 Suggests:
-    multcomp,
-    knitr
+    ggplot2,
+    knitr,
+    multcomp
 Imports:
     stats,
     MASS
