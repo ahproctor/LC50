@@ -58,12 +58,14 @@ NULL
 ##' \code{start=NULL} these parameters are determined by
 ##' \code{\link{lc50.initialize}}.
 ##' @param link the link function for survival fractions
+##' @param common.background should a common background survival be
+##' estimated for each treatment group.
 ##' @param X a design matrix
 ##' @param Y a two column matrix of responses
 ##' @param conc a vector of toxin concentrations
 ##' @param alpha vector of starting rate parameters
 ##' @param beta vector of starting coefficients
-##' @param gamma vector of control survival parameters
+##' @param gamma vector of background survival parameters
 ##'
 ##' @return \code{lc50} returns an object of class inheriting from
 ##' "lc50". See later in this section.
@@ -84,10 +86,13 @@ NULL
 ##' \item{\code{logLik}}{the maximized log likelihood.}
 ##' \item{\code{aic}}{Akaike's information criteria.}
 ##' \item{\code{alpha}}{a vector of rate coefficients.}
-##' \item{\code{gamma}}{a vector of control mortality coefficients.}
-##' \item{\code{gamma.cov}}{covariance of the control mortality coefficients.}
-##' \item{\code{coefficients}}{a named vector of coefficients.}
-##' \item{\code{cov.scaled}}{covariance of the coefficients.}
+##' \item{\code{alpha.cov}}{covariance of the rate coefficients.}
+##' \item{\code{beta}}{a named vector of lc50 model coefficients.}
+##' \item{\code{beta.cov}}{covariance of the lc50 model coefficients.}
+##' \item{\code{gamma}}{a vector of background survival coefficients.}
+##' \item{\code{gamma.cov}}{covariance of the background survival coefficients.}
+##' \item{\code{coefficients}}{a named vector of lc50 model coefficients.}
+##' \item{\code{cov.scaled}}{covariance of the lc50 model coefficients.}
 ##' \item{\code{loglc50}}{a named vector of log lc50s for the treatment groups.}
 ##' \item{\code{loglc50.cov}}{covariance of the lc50s for the treatment groups.}
 ##' \item{\code{concentration}}{a vector of taxin concentrations.}
@@ -97,7 +102,7 @@ NULL
 ##' \item{\code{fitted.values}}{the fitted probability of survival.}
 ##' \item{\code{deviance}}{the deviance.}
 ##' \item{\code{df.residual}}{the residual degrees of freedom.}
-##' \item{\code{null.deviance}}{the ddeviance of the null model, which fits a single mortality rate to all data.}
+##' \item{\code{null.deviance}}{the deviance of the null model, which fits a single mortality rate to all data.}
 ##' \item{\code{df.null}}{the degrees of freedom for the null model.}
 ##' \item{\code{optim}}{the result of the call to \code{optim}.}
 ##' \item{\code{xlevels}}{a record of the levels of the factors used in fitting.}
@@ -108,7 +113,7 @@ NULL
 ##' \item{\code{model}}{the model frame.}
 ##'
 ##' @export
-lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit")) {
+lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit"),common.background=FALSE) {
 
   ## Record call and link function
   cl <- match.call()
@@ -138,13 +143,14 @@ lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","lo
   alpha <- start$alpha
   gamma <- start$gamma
   beta <- qr.solve(X,start$loglc50[group])
-  r <- lc50.fit(X,Y,conc,group,alpha,gamma,beta,link)
+  r <- lc50.fit(X,Y,conc,group,alpha,beta,gamma,link,common.background)
   r <- c(r,
          list(
            xlevels=.getXlevels(mt, mf),
            contrasts=attr(X,"contrasts"),
            call=cl,
            link=link,
+           common.background=common.background,
            terms=mt,
            model=mf))
   class(r) <- "lc50"
@@ -154,13 +160,16 @@ lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","lo
 
 ##' @rdname lc50
 ##' @importFrom MASS ginv
-lc50.fit <- function(X,Y,conc,group,alpha,gamma,beta,link) {
+lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background) {
 
   ## Decompose response
   y <- Y[,1]
   N <- rowSums(Y)
 
   ng <- nlevels(group)
+  alpha.k <- seq_len(ng)
+  beta.k <- ng+seq_len(ncol(X))
+  gamma.k <- ng+ncol(X)+if(common.background) 1 else seq_len(ng)
 
   ## Index of first row of X for each group
   k <- match(levels(group),group)
@@ -169,61 +178,66 @@ lc50.fit <- function(X,Y,conc,group,alpha,gamma,beta,link) {
   ## Select inverse link function
   ilink <- switch(link,probit=pnorm,logit=plogis)
 
-  fitted.pq <- function(alpha,gamma,beta) {
+  fitted.pq <- function(alpha,beta,gamma) {
     p <- ilink(alpha[group]*(log(conc)-X%*%beta))
-    q <- ilink(gamma[group])
+    q <- ilink(if(!common.background) gamma[group] else gamma)
     ifelse(conc>0,p*q,q)
   }
 
   ## Negative log likelihood
   nlogL <- function(pars) {
-    alpha <- pars[seq_len(ng)]
-    gamma <- pars[ng+seq_len(ng)]
-    beta <- pars[-seq_len(2*ng)]
-    pq <- fitted.pq(alpha,gamma,beta)
+    alpha <- pars[alpha.k]
+    beta <- pars[beta.k]
+    gamma <- rep(pars[gamma.k],length.out=ng)
+    pq <- fitted.pq(alpha,beta,gamma)
     nll <- -sum(dbinom(y,N,pq,log=TRUE))
     if(!is.finite(nll)) nll <- .Machine$double.xmax
     nll
   }
   ## Minimize negative log likelihood
-  mn <- optim(c(alpha,gamma,beta),nlogL,,method="BFGS",hessian=TRUE)
+  mn <- optim(c(alpha,beta,gamma),nlogL,method="BFGS",hessian=TRUE)
 
   ## Basic parameters
-  alpha <- mn$par[seq_len(ng)]
+  alpha <- mn$par[alpha.k]
   names(alpha) <- levels(group)
-  gamma <- mn$par[ng+seq_len(ng)]
-  names(gamma) <- levels(group)
-  beta <- mn$par[-seq_len(2*ng)]
+  beta <- mn$par[beta.k]
   names(beta) <- colnames(X)
+  gamma <- mn$par[gamma.k]
+  names(gamma) <- if(!common.background) levels(group) else "Common"
+
   ## Covariance of the beta (is subset of inverse hessian)
-  V <- ginv(mn$hessian)[-seq_len(2*ng),-seq_len(2*ng),drop=FALSE]
-  colnames(V) <- rownames(V) <- colnames(X)
+  V <- ginv(mn$hessian)
+  alpha.cov <- V[alpha.k,alpha.k,drop=FALSE]
+  colnames(alpha.cov) <- rownames(alpha.cov) <- levels(group)
+  beta.cov <- V[beta.k,beta.k,drop=FALSE]
+  colnames(beta.cov) <- rownames(beta.cov) <- colnames(X)
+  gamma.cov <- V[gamma.k,gamma.k,drop=FALSE]
+  colnames(gamma.cov) <- rownames(gamma.cov) <- if(!common.background) levels(group) else "Common"
 
   ## Compute lc50 and covariance by group
   loglc50 <- as.numeric(Xg%*%beta)
   names(loglc50) <- levels(group)
-  loglc50.cov <- Xg%*%V%*%t(Xg)
+  loglc50.cov <- Xg%*%beta.cov%*%t(Xg)
   colnames(loglc50.cov) <- rownames(loglc50.cov) <- levels(group)
 
-  ## Covariance of the gamma (is subset of inverse hessian)
-  gamma.cov <- ginv(mn$hessian)[ng+seq_len(ng),ng+seq_len(ng),drop=FALSE]
-  colnames(gamma.cov) <- rownames(gamma.cov) <- levels(group)
-
   ## Compute the deviance
-  fitted <- fitted.pq(alpha,gamma,beta)
+  fitted <- fitted.pq(alpha,beta,gamma)
   deviance <- -2*sum(dbinom(y,N,fitted,log=T)-dbinom(y,N,y/N,log=T))
   df.residual <- nrow(X)-(ncol(X)+ng)
   null.deviance <- -2*sum(dbinom(y,N,sum(y)/sum(N),log=T)-dbinom(y,N,y/N,log=T))
   df.null <- nrow(X)-(1+ng)
-  aic <- 2*(ncol(X)+2*ng+mn$value)
+  aic <- 2*(length(mn$par)+mn$value)
 
   r <- list(logLik=-mn$value,
             aic=aic,
             alpha=alpha,
+            alpha.cov=alpha.cov,
+            beta=beta,
+            beta.cov=beta.cov,
             gamma=gamma,
             gamma.cov=gamma.cov,
             coefficients=beta,
-            cov.scaled=V,
+            cov.scaled=beta.cov,
             loglc50=loglc50,
             loglc50.cov=loglc50.cov,
             concentration=conc,
@@ -408,10 +422,10 @@ anova.lc50 <- function(object,...,test = NULL)  {
   resdev <- resdf <- NULL
   if(nvars > 0) {
     for (i in seq_len(nvars)) {
-      beta <- object$coefficients[varseq<i]
       fit <- eval(call("lc50.fit",X=x[,varseq<i,drop=FALSE],
                        Y=object$y,conc=object$concentration,group=object$group,
-                       alpha=object$alpha,gamma=object$gamma,beta=beta,link=object$link))
+                       alpha=object$alpha,beta=object$beta[varseq<i],gamma=object$gamma,
+                       link=object$link,common.background=object$common.background))
       resdev <- c(resdev, fit$deviance)
       resdf <- c(resdf, fit$df.residual)
     }
@@ -590,8 +604,9 @@ predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...)
   ## Determine the treatment groups
   group <- factor(mf[,"(group)"],levels(object$group))
 
+  ## Extract coefficients
   alpha <- object$alpha
-  beta <- object$coefficients
+  beta <- object$beta
   gamma <- object$gamma
 
   ## Select inverse link function
@@ -599,7 +614,7 @@ predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...)
 
   ## Predict survival fraction
   p <- ilink(alpha[group]*(log(conc)-X%*%beta))
-  q <- if(type=="adjusted") 1 else ilink(gamma[group])
+  q <- if(type=="adjusted") 1 else ilink(if(!object$common.background) gamma[group] else gamma)
   ifelse(conc>0,p*q,q)
 }
 

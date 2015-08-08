@@ -114,7 +114,7 @@ arguments:
   constant within levels of this factor.
 
 ```{r}
-fit <- lc50(cbind(alive,dead)~salinity*temperature,concentration=conc,group=group,data=toxicity)
+fit <- lc50(cbind(alive,dead)~salinity*temperature,concentration=conc,group=group,data=toxicity,common.background = TRUE)
 summary(fit)
 ```
 
@@ -128,7 +128,7 @@ LC50.  Although this fits a restricted model for log LC50, it still
 fits a separate control parameter $\gamma_{i}$ and rate parameter
 $\alpha_{i}$ for each group.
 ```{r}
-fit <- lc50(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity)
+fit <- lc50(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity,common.background=T)
 summary(fit)
 ```
 

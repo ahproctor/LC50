@@ -6,9 +6,9 @@
 \title{Estimate LC50 for a toxin}
 \usage{
 lc50(formula, concentration, group, data, start = NULL, link = c("probit",
-  "logit"))
+  "logit"), common.background = FALSE)
 
-lc50.fit(X, Y, conc, group, alpha, gamma, beta, link)
+lc50.fit(X, Y, conc, group, alpha, beta, gamma, link, common.background)
 }
 \arguments{
 \item{formula}{a formula relating log LC50 to covariates
@@ -27,6 +27,9 @@ concentration of the toxin.}
 
 \item{link}{the link function for survival fractions}
 
+\item{common.background}{should a common background survival be
+estimated for each treatment group.}
+
 \item{X}{a design matrix}
 
 \item{Y}{a two column matrix of responses}
@@ -35,9 +38,9 @@ concentration of the toxin.}
 
 \item{alpha}{vector of starting rate parameters}
 
-\item{gamma}{vector of control survival parameters}
-
 \item{beta}{vector of starting coefficients}
+
+\item{gamma}{vector of background survival parameters}
 }
 \value{
 \code{lc50} returns an object of class inheriting from
@@ -59,10 +62,13 @@ following components:
 \item{\code{logLik}}{the maximized log likelihood.}
 \item{\code{aic}}{Akaike's information criteria.}
 \item{\code{alpha}}{a vector of rate coefficients.}
-\item{\code{gamma}}{a vector of control mortality coefficients.}
-\item{\code{gamma.cov}}{covariance of the control mortality coefficients.}
-\item{\code{coefficients}}{a named vector of coefficients.}
-\item{\code{cov.scaled}}{covariance of the coefficients.}
+\item{\code{alpha.cov}}{covariance of the rate coefficients.}
+\item{\code{beta}}{a named vector of lc50 model coefficients.}
+\item{\code{beta.cov}}{covariance of the lc50 model coefficients.}
+\item{\code{gamma}}{a vector of background survival coefficients.}
+\item{\code{gamma.cov}}{covariance of the background survival coefficients.}
+\item{\code{coefficients}}{a named vector of lc50 model coefficients.}
+\item{\code{cov.scaled}}{covariance of the lc50 model coefficients.}
 \item{\code{loglc50}}{a named vector of log lc50s for the treatment groups.}
 \item{\code{loglc50.cov}}{covariance of the lc50s for the treatment groups.}
 \item{\code{concentration}}{a vector of taxin concentrations.}
@@ -72,7 +78,7 @@ following components:
 \item{\code{fitted.values}}{the fitted probability of survival.}
 \item{\code{deviance}}{the deviance.}
 \item{\code{df.residual}}{the residual degrees of freedom.}
-\item{\code{null.deviance}}{the ddeviance of the null model, which fits a single mortality rate to all data.}
+\item{\code{null.deviance}}{the deviance of the null model, which fits a single mortality rate to all data.}
 \item{\code{df.null}}{the degrees of freedom for the null model.}
 \item{\code{optim}}{the result of the call to \code{optim}.}
 \item{\code{xlevels}}{a record of the levels of the factors used in fitting.}
