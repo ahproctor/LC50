@@ -1,4 +1,4 @@
-a---
+---
 title: "LC50"
 author: "A. Proctor and S Wotherspoon"
 date: "`r Sys.Date()`"
@@ -95,7 +95,7 @@ ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
 ### Model fitting
 
 The LC50 lethal concentrations for each temperature and salinity
-combinationan be estimated with `lc50`.  This function fits the
+combination can be estimated with `lc50`.  This function fits the
 Binomial model described in the previous section by maximum
 likelihood.  The details of the model are specified by three
 arguments:
@@ -114,9 +114,12 @@ arguments:
   constant within levels of this factor.
 
 ```{r}
-fit <- lc50(cbind(alive,dead)~salinity*temperature,concentration=conc,group=group,data=toxicity,common.background = TRUE)
+fit <- lc50(cbind(alive,dead)~salinity*temperature,concentration=conc,group=group,data=toxicity)
 summary(fit)
 ```
+By default, a probit link is used and separate background survival
+rates are estimated for each group.
+
 
 An analysis of deviance table for the fit is constructed with `anova`.
 ```{r}
@@ -128,7 +131,7 @@ LC50.  Although this fits a restricted model for log LC50, it still
 fits a separate control parameter $\gamma_{i}$ and rate parameter
 $\alpha_{i}$ for each group.
 ```{r}
-fit <- lc50(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity,common.background=T)
+fit <- lc50(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity)
 summary(fit)
 ```
 
@@ -198,7 +201,7 @@ library(multcomp)
 mc <- glht(fit,linfct=mcp(salinity="Tukey",temperature="Tukey"))
 summary(mc)
 ```
-Multplicity adjusted confidence intervals for
+Multiplicity adjusted confidence intervals for
 differences in log LC50 can be obtained with `confint`
 ```{r}
 confint(mc)
