@@ -89,11 +89,12 @@ following components:
 \item{\code{model}}{the model frame.}
 }
 \description{
-Estimate LC50 from survival data in the presence of additional
+Estimates LC50(s) from survival data in the presence of additional/multiple
 stressors and non-ignorable control mortality
 }
 \details{
-DESCRIBE the model.
+Maximum Liklihood is used to estimate LC50s directly, using a probit (default) link.
+Results are adjusted to account for surivability in the controls.
 
 \code{lc50.fit} is the workhorse function: it is not normally
 called directly but can be more efficient where the response

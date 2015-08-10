@@ -1,10 +1,22 @@
 #' LC50 lethal concentrations in the presence of additional stressors.
 #'
-#' The common 'critical effect concentration' used in toxicology bioassays is the Lethal concentration of 50% of the testing populaiton (LC50).
+#' The common 'critical effect concentration' used in toxicology bioassays is the 
+#' Lethal concentration of 50% of the tested populaiton (LC50).
 #' This package provides the facilities for estimating LC50s for a
-#' toxin from sampled survival data at a single time-point in the presence of
-#' additional stressors and non-ignorable control mortality. The result of which is the simultaneous calculations of multiple LC50s within a single experiemental framework where toxicants are tested within a framework of a factorial experiment.
-#' Examples of facotrial arragement of multiple stressors include temperature, salinity, 
+#' toxin from survival data at a single time-point in the presence of
+#' additional stressors and non-ignorable control mortality. The result of this package is 
+#' the simultaneous calculations of multiple LC50s for a single experiemental design where 
+#' toxicants are tested within a framework of a factorial experiment with additional stressors.
+#' The additional stresses are a discrete factor placed on the tested populaiton 
+#' along with the gradient of a toxicant; common examples ofadditional stressors 
+#' are temperature, salinity, pH, and UV radiation (INCLUDE REFS HERE). 
+#' Two stressors can be tested simulaneously, known as a 'multiple stressor' experiement.
+#' This package facilitates the testing of interactions of the multiple stressors as well as main effects. 
+#' As LC50 is estimated for each combination of multiple stressors in the (n*n) experimental framework.
+#' 
+#' 
+#' The estimated LC50s are adjusted to account for the mortality in the control replicates. This paramter is calulated as the surival of the controls 
+#' and is reffered as both background and control surivival.
 #'
 #'
 #' @name LC50-package
@@ -15,8 +27,8 @@ NULL
 
 ##' Simulated toxicity data
 ##'
-##' A simulated dataset showing individual survival following exposure
-##' to a known toxin in the presence of the additional stressors
+##' A simulated dataset showing the individual survival within replicates, following exposure
+##' to a known toxin in the presence of the additional stressors,
 ##' temperature and salinity.
 ##'
 ##' Samples of an aqueous solution of a toxin, of varying
@@ -27,23 +39,26 @@ NULL
 ##'
 ##' @format A data frame with 225 rows and 8 variables:
 ##' \describe{
-##'   \item{vial}{the replicate}
-##'   \item{temperature}{temperature of solution}
-##'   \item{salinity}{salinity of solution}
-##'   \item{group}{additinal stressor treatment groups}
-##'   \item{conc}{concentration of toxin in solution}
-##'   \item{total}{number of individuals in vial}
-##'   \item{alive}{number of survivors after 4 days}
-##'   \item{dead}{number of dead individuals after 4 days}
+##'   \item{vial}{The replicate}
+##'   \item{temperature}{Temperature of solution}
+##'   \item{salinity}{Salinity of solution}
+##'   \item{group}{Additinal stressor treatment groups}
+##'   \item{conc}{Concentration of toxin in solution}
+##'   \item{total}{Number of individuals in vial}
+##'   \item{alive}{Number of survivors after 4 days}
+##'   \item{dead}{Number of dead individuals after 4 days}
 ##' }
 ##'
 "toxicity"
 
 
-##' Estimate LC50 from survival data in the presence of additional
+##' Estimates LC50(s) from survival data in the presence of additional/multiple
 ##' stressors and non-ignorable control mortality
 ##'
-##' DESCRIBE the model.
+##' Maximum Liklihood is used to estimate LC50s directly, using a probit (default) link. 
+##' Results are adjusted to account for surivability in the controls.
+##'
+##  \deqn['\Phi^{-1}(\pi_{ki}) &= \alpha_{k} (\log \mathrm{conc}_{ki}-\log \mathrm{LC50}_{k}) 
 ##'
 ##' \code{lc50.fit} is the workhorse function: it is not normally
 ##' called directly but can be more efficient where the response
