@@ -5,9 +5,11 @@
 \alias{LC50-package}
 \title{LC50 lethal concentrations in the presence of additional stressors.}
 \description{
-Provides facilities for estimating lethal concentrations for a
-toxin from destructively sampled survival data in the presence of
-additional stressors and non-ignorable control mortality.
+The common 'critical effect concentration' used in toxicology bioassays is the Lethal concentration of 50% of the testing populaiton (LC50).
+This package provides the facilities for estimating LC50s for a
+toxin from sampled survival data at a single time-point in the presence of
+additional stressors and non-ignorable control mortality. The result of which is the simultaneous calculations of multiple LC50s within a single experiemental framework where toxicants are tested within a framework of a factorial experiment.
+Examples of facotrial arragement of multiple stressors include temperature, salinity,
 }
 \author{
 S. Wotherspoon, A. Proctor.
