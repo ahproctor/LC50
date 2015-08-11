@@ -345,6 +345,7 @@ summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
     gamma.se <- sqrt(diag(object$gamma.cov))
     bsurv.table <- cbind(gamma,gamma.se,ilink(gamma),ilink(gamma-1.96*gamma.se),ilink(gamma-1.96*gamma.se))
     dimnames(bsurv.table) <- list(names(gamma), c("Estimate","Std. Error", "B Surv", "Lwr 95%", "Upr 95%"))
+    r$bsurv <- bsurv.table
   }
 
   if(rate) {
