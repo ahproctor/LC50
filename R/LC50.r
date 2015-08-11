@@ -310,8 +310,10 @@ print.lc50 <- function(x,digits = max(3L, getOption("digits") - 3L),...) {
   print.default(format(x$coefficients, digits=digits),print.gap=2L,quote=FALSE)
   cat("log LC50:\n")
   print.default(format(x$loglc50, digits=digits),print.gap=2L,quote=FALSE)
-  cat("Probit Control Survival:\n")
+  cat("Baseline Survival:\n")
   print.default(format(x$gamma, digits=digits),print.gap=2L,quote=FALSE)
+  cat("Rate:\n")
+  print.default(format(x$alpha, digits=digits),print.gap=2L,quote=FALSE)
   invisible(x)
 }
 
@@ -322,18 +324,20 @@ print.lc50 <- function(x,digits = max(3L, getOption("digits") - 3L),...) {
 ##' @title Summmarizing LC50 model fits
 ##' @param object an object of class \code{lc50}, obtained as the
 ##' result of a call to \code{\link{lc50}}
+##' @param background if \code{TRUE} a summary table for the background survival is calculated
+##' @param rate if \code{TRUE} a summary table for the rate parameters is calculated
+##' @param ... additional parameters are ignored.
 ##' @param x an object of class \code{summary.lc50}, usually, a result
 ##' of a call to \code{summary.lc50}.
 ##' @param digits the number of significant digits to use when printing.
 ##' @param signif.stars logical. If \code{TRUE}, 'significance stars'
 ##' are printed for each coefficient.
-##' @param ... additional parameters are ignored.
 ##' @return Returns an object of class \code{summary.lc50}, with components
 ##' \item{\code{coefficients}}{a table of coefficients.}
 ##' \item{\code{lc50}}{a table of LC50 for each treatment group.}
-##' \item{\code{csurv}}{a table of control survival for each treatment group.}
+##' \item{\code{bsurv}}{a table of background survival for each treatment group.}
 ##' @export
-summary.lc50 <- function(object,...) {
+summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
 
   keep <- match(c("call","deviance","aic","contrasts","df.residual","null.deviance","df.null"),names(object),0L)
   cf <- object$coefficients
@@ -348,16 +352,28 @@ summary.lc50 <- function(object,...) {
   lc50.table <- cbind(loglc50, loglc50.se, exp(loglc50), exp(loglc50-1.96*loglc50.se), exp(loglc50+1.96*loglc50.se))
   dimnames(lc50.table) <- list(names(loglc50), c("Estimate","Std. Error", "LC50", "Lwr 95%", "Upr 95%"))
 
-  ilink <- switch(object$link,probit=pnorm,logit=plogis)
-  gamma <- object$gamma
-  gamma.se <- sqrt(diag(object$gamma.cov))
-  csurv.table <- cbind(gamma,gamma.se,ilink(gamma),ilink(gamma-1.96*gamma.se),ilink(gamma-1.96*gamma.se))
-  dimnames(csurv.table) <- list(names(gamma), c("Estimate","Std. Error", "C Surv", "Lwr 95%", "Upr 95%"))
-
   r <- c(list(coefficients=coef.table,
-              lc50=lc50.table,
-              csurv=csurv.table),
+              lc50=lc50.table),
          object[keep])
+
+
+  if(background) {
+    ilink <- switch(object$link,probit=pnorm,logit=plogis)
+    gamma <- object$gamma
+    gamma.se <- sqrt(diag(object$gamma.cov))
+    bsurv.table <- cbind(gamma,gamma.se,ilink(gamma),ilink(gamma-1.96*gamma.se),ilink(gamma-1.96*gamma.se))
+    dimnames(bsurv.table) <- list(names(gamma), c("Estimate","Std. Error", "B Surv", "Lwr 95%", "Upr 95%"))
+  }
+
+  if(rate) {
+    alpha <- object$alpha
+    alpha.se <- sqrt(diag(object$alpha.cov))
+    rate.table <- cbind(alpha,alpha.se,alpha-1.96*alpha.se,alpha-1.96*alpha.se)
+    dimnames(rate.table) <- list(names(alpha), c("Estimate","Std. Error", "Lwr 95%", "Upr 95%"))
+    r$rate <- rate.table
+  }
+
+
   class(r) <- c("summary.lc50")
   r
 }
@@ -380,9 +396,16 @@ print.summary.lc50 <- function(x,digits=max(3L,getOption("digits")-3L),
   cat("AIC: ", format(x$aic, digits = max(4L, digits + 1L)),"\n")
   cat("\nLC50:\n")
   printCoefmat(x$lc50,digits=digits,cs.ind=1:2,tst.ind=NULL,has.Pvalue=FALSE,na.print="NA",...)
-  cat("\nControl Survival:\n")
-  printCoefmat(x$csurv,digits=digits,cs.ind=1:2,tst.ind=NULL,has.Pvalue=FALSE,na.print="NA",...)
-  cat("\n")
+  if(!is.null(x$bsurv)) {
+    cat("\nBackground Survival:\n")
+    printCoefmat(x$bsurv,digits=digits,cs.ind=1:2,tst.ind=NULL,has.Pvalue=FALSE,na.print="NA",...)
+    cat("\n")
+  }
+  if(!is.null(x$rate)) {
+    cat("\nRate:\n")
+    printCoefmat(x$rate,digits=digits,cs.ind=1:2,tst.ind=NULL,has.Pvalue=FALSE,na.print="NA",...)
+    cat("\n")
+  }
   invisible(x)
 }
 

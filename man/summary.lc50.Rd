@@ -5,7 +5,7 @@
 \alias{summary.lc50}
 \title{Summmarizing LC50 model fits}
 \usage{
-\method{summary}{lc50}(object, ...)
+\method{summary}{lc50}(object, background = TRUE, rate = FALSE, ...)
 
 \method{print}{summary.lc50}(x, digits = max(3L, getOption("digits") - 3L),
   signif.stars = getOption("show.signif.stars"), ...)
@@ -13,6 +13,10 @@
 \arguments{
 \item{object}{an object of class \code{lc50}, obtained as the
 result of a call to \code{\link{lc50}}}
+
+\item{background}{if \code{TRUE} a summary table for the background survival is calculated}
+
+\item{rate}{if \code{TRUE} a summary table for the rate parameters is calculated}
 
 \item{...}{additional parameters are ignored.}
 
@@ -28,7 +32,7 @@ are printed for each coefficient.}
 Returns an object of class \code{summary.lc50}, with components
 \item{\code{coefficients}}{a table of coefficients.}
 \item{\code{lc50}}{a table of LC50 for each treatment group.}
-\item{\code{csurv}}{a table of control survival for each treatment group.}
+\item{\code{bsurv}}{a table of background survival for each treatment group.}
 }
 \description{
 Summary method for class "\code{lc50}".
