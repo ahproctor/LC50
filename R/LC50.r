@@ -769,7 +769,7 @@ model {
 }",sep="")
   }
 
-  model <- jags.model(textConnection(bugs.model),
+  model <- rjags::jags.model(textConnection(bugs.model),
                       data = list(
                         "alive" = Y[,1],
                         "total" = rowSums(Y),
