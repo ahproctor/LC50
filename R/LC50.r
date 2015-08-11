@@ -711,36 +711,21 @@ lc50JAGS <- function(formula,concentration,group,data,start=NULL,link=c("probit"
   k <- match(levels(group),group)
   Xg <- X[k,,drop=FALSE]
 
-
   ## Define BUGS model
   if(!common.background) {
-    gind <- "[group[i]]"
-    gprior <- "
-  for(i in 1:Ngroup) {
-    gamma[i] ~ dnorm(0,0.0001)
-  }
-"
-  } else {
-    gind <- ""
-    gprior <- "
-  gamma ~ dnorm(0,0.0001)
-"
-  }
-
-  bugs.model <- paste("
+    bugs.model <- paste("
 model {
   ## Likelihood
   for(i in 1:N) {
-    #zero[i] <- step(-conc[i])
     alive[i] ~ dbin(pi[i],total[i])
-    pi[i] <- ifelse(zero[i]>0,q[i],p[i]*q[i])
+    pi[i] <- q[group[i]]*ifelse(zero[i]>0,1,p[i])
     ",link,"(p[i]) <- alpha[group[i]]*(log(conc[i]+zero[i]) - loglc50[group[i]])
-    ",link,"(q[i]) <- gamma",gind,"
   }
 
   loglc50 <- X %*% beta
   for(i in 1:Ngroup) {
     log(lc50[i]) <- loglc50[i]
+    ",link,"(q[i]) <- gamma[i]
   }
 
   ## Priors
@@ -750,10 +735,38 @@ model {
   }
   for(i in 1:Ncoef) {
     beta[i] ~ dnorm(0,0.0001)
-  }",
-                    gprior,
-                    "
+  }
+  for(i in 1:Ngroup) {
+    gamma[i] ~ dnorm(0,0.0001)
+  }
 }",sep="")
+  } else {
+    bugs.model <- paste("
+model {
+  ## Likelihood
+  for(i in 1:N) {
+    alive[i] ~ dbin(pi[i],total[i])
+    pi[i] <- q*ifelse(zero[i]>0,1,p[i])
+    ",link,"(p[i]) <- alpha[group[i]]*(log(conc[i]+zero[i]) - loglc50[group[i]])
+  }
+
+  loglc50 <- X %*% beta
+  for(i in 1:Ngroup) {
+    log(lc50[i]) <- loglc50[i]
+  }
+  ",link,"(q) <- gamma
+
+  ## Priors
+  for(i in 1:Ngroup) {
+    ## alpha's must be negative
+    alpha[i] ~ dnorm(0,0.0001)T(,0)
+  }
+  for(i in 1:Ncoef) {
+    beta[i] ~ dnorm(0,0.0001)
+  }
+  gamma ~ dnorm(0,0.0001)
+}",sep="")
+  }
 
   model <- jags.model(textConnection(bugs.model),
                       data = list(
