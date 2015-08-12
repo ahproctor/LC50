@@ -317,7 +317,8 @@ print.lc50 <- function(x,digits = max(3L, getOption("digits") - 3L),...) {
 ##' @return Returns an object of class \code{summary.lc50}, with components
 ##' \item{\code{coefficients}}{a table of coefficients.}
 ##' \item{\code{lc50}}{a table of LC50 for each treatment group.}
-##' \item{\code{bsurv}}{a table of background survival for each treatment group.}
+##' \item{\code{bsurv}}{optionally, a table of background survival for each treatment group.}
+##' \item{\code{rate}}{optionally, a table of rates for each treatment group.}
 ##' @export
 summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
 
