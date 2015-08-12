@@ -343,7 +343,7 @@ summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
     ilink <- switch(object$link,probit=pnorm,logit=plogis)
     gamma <- object$gamma
     gamma.se <- sqrt(diag(object$gamma.cov))
-    bsurv.table <- cbind(gamma,gamma.se,ilink(gamma),ilink(gamma-1.96*gamma.se),ilink(gamma-1.96*gamma.se))
+    bsurv.table <- cbind(gamma,gamma.se,ilink(gamma),ilink(gamma-1.96*gamma.se),ilink(gamma+1.96*gamma.se))
     dimnames(bsurv.table) <- list(names(gamma), c("Estimate","Std. Error", "B Surv", "Lwr 95%", "Upr 95%"))
     r$bsurv <- bsurv.table
   }
@@ -351,7 +351,7 @@ summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
   if(rate) {
     alpha <- object$alpha
     alpha.se <- sqrt(diag(object$alpha.cov))
-    rate.table <- cbind(alpha,alpha.se,alpha-1.96*alpha.se,alpha-1.96*alpha.se)
+    rate.table <- cbind(alpha,alpha.se,alpha-1.96*alpha.se,alpha+1.96*alpha.se)
     dimnames(rate.table) <- list(names(alpha), c("Estimate","Std. Error", "Lwr 95%", "Upr 95%"))
     r$rate <- rate.table
   }
