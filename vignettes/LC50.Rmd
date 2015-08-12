@@ -137,9 +137,11 @@ summary(fit)
 
 The table of lethal concentrations can be extracted from the summary and displayed graphically
 ```{r,fig.width=7,fig.height=6}
-lc50 <- as.data.frame(summary(fit)$lc50)
-lc50 <- cbind(group=rownames(lc50),lc50)
-ggplot(lc50,aes(x=group,y=LC50))+
+d.lc50 <- with(summary(fit),
+               cbind(lc50,
+                     toxicity[match(rownames(lc50),toxicity$group),
+                              c("group","salinity","temperature")]))
+ggplot(d.lc50,aes(x=group,y=LC50))+
   geom_linerange(mapping=aes(x=group,ymin=`Lwr 95%`,ymax=`Upr 95%`),col="dodgerblue1",lwd=3)+
   geom_point()
 ```
@@ -154,6 +156,8 @@ d.pr$survival <- predict(fit,d.pr)
 ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
   geom_point()+
   geom_line(aes(x=conc,y=survival,colour=group),data=d.pr)+
+  #geom_vline(aes(xintercept=LC50,colour=group),data=d.lc50)+
+  #geom_rect(aes(x=Estimate,y=0,xmin=`Lwr 95%`,xmax=`Upr 95%`,ymin=0,ymax=1,fill=group),data=d.lc50,alpha=0.2,color=NA)+
   facet_grid(temperature~salinity)
 ```
 
