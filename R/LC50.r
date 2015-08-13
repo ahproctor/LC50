@@ -652,6 +652,11 @@ predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...)
 ##' the posterior using \code{update} and \code{coda.samples} from
 ##' \package{rjags}.
 ##'
+##' The model assumes half Normal priors for \code{alpha} and Normal
+##' priors for \code{beta} and \code{gamma}.  For \code{alpha} and
+##' \code{gamma}, a single prior mean and precision is assumed for all
+##' groups, for \code{beta} individual prior means and precisions can be specified
+##'
 ##' @title Estimate LC50 for a toxin
 ##' @param formula a formula relating log LC50 to covariates
 ##' describing the aditional stressors.
@@ -667,12 +672,24 @@ predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...)
 ##' estimated for each treatment group.
 ##' @param n.adapt parameter passed to \code{jags.model}
 ##' @param n.chains parameter passed to \code{jags.model}
+##' @param alpha.mu prior mean for alpha
+##' @param alpha.tau prior precision for alpha
+##' @param beta.mu either a single prior mean for all beta parameters,
+##' or a vector of prior means, one for each parameter.
+##' @param beta.tau either a single prior precision for all beta
+##' parameters, or a vector of prior precisions, one for each
+##' parameter.
+##' @param gamma.mu prior mean for gamma
+##' @param gamma.tau prior precision for gamma
 ##' @return Returns an object inheriting from class \code{jags} which
 ##' can be used to generate dependent samples from the posterior
 ##' distribution of the parameters
 ##' @export
 lc50JAGS <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit"),
-                     common.background=FALSE,n.adapt=500,n.chains=4) {
+                     common.background=FALSE,n.adapt=500,n.chains=4,
+                     alpha.mu=0,alpha.tau=0.001,
+                     beta.mu=0,beta.tau=0.001,
+                     gamma.mu=0,gamma.tau=0.001) {
 
   if(!requireNamespace("rjags",quietly=TRUE)) {
     stop("lc50Jags requires the rjags package to be installed", call. = FALSE)
@@ -701,6 +718,15 @@ lc50JAGS <- function(formula,concentration,group,data,start=NULL,link=c("probit"
   ## Determine the treatment groups
   group <- as.factor(mf[,"(group)"])
 
+  ## Check lengths of prior hyper parameters for beta
+  if(!(length(beta.mu)==1 || length(beta.mu)==ncol(X)))
+    stop("Vector of prior means for beta is wrong length")
+  beta.mu <- rep(beta.mu,length.out=ncol(X))
+
+  if(!(length(beta.tau)==1 || length(beta.tau)==ncol(X)))
+    stop("Vector of prior precisions for beta is wrong length")
+  beta.tau <- rep(beta.tau,length.out=ncol(X))
+
   ## Fit separate models to each group to generate initial parameter estimates
   if(is.null(start)) start <- lc50.initialize(Y,conc,group)
   start$beta <- qr.solve(X,start$loglc50[group])
@@ -713,6 +739,7 @@ lc50JAGS <- function(formula,concentration,group,data,start=NULL,link=c("probit"
 
   ## Define BUGS model
   if(!common.background) {
+
     bugs.model <- paste("
 model {
   ## Likelihood
@@ -731,16 +758,18 @@ model {
   ## Priors
   for(i in 1:Ngroup) {
     ## alpha's must be negative
-    alpha[i] ~ dnorm(0,0.0001)T(,0)
+    alpha[i] ~ dnorm(alpha.mu,alpha.tau)T(,0)
   }
   for(i in 1:Ncoef) {
-    beta[i] ~ dnorm(0,0.0001)
+    beta[i] ~ dnorm(beta.mu[i],beta.tau[i])
   }
   for(i in 1:Ngroup) {
-    gamma[i] ~ dnorm(0,0.0001)
+    gamma[i] ~ dnorm(gamma.mu,gamma.tau)
   }
 }",sep="")
+
   } else {
+
     bugs.model <- paste("
 model {
   ## Likelihood
@@ -759,13 +788,14 @@ model {
   ## Priors
   for(i in 1:Ngroup) {
     ## alpha's must be negative
-    alpha[i] ~ dnorm(0,0.0001)T(,0)
+    alpha[i] ~ dnorm(alpha.mu,alpha.tau)T(,0)
   }
   for(i in 1:Ncoef) {
-    beta[i] ~ dnorm(0,0.0001)
+    beta[i] ~ dnorm(beta.mu[i],beta.tau[i])
   }
-  gamma ~ dnorm(0,0.0001)
+  gamma ~ dnorm(gamma.mu,gamma.tau)
 }",sep="")
+
   }
 
   model <- rjags::jags.model(textConnection(bugs.model),
@@ -778,7 +808,13 @@ model {
                         "X" = Xg,
                         "N" = nrow(Y),
                         "Ncoef" = ncol(X),
-                        "Ngroup" = nlevels(group)),
+                        "Ngroup" = nlevels(group),
+                        "alpha.mu" = alpha.mu,
+                        "alpha.tau" = alpha.tau,
+                        "beta.mu" = beta.mu,
+                        "beta.tau" = beta.tau,
+                        "gamma.mu" = gamma.mu,
+                        "gamma.tau" = gamma.tau),
                       inits=start[c("alpha","beta","gamma")],
                       n.chains = n.chains,
                       n.adapt = n.adapt)
