@@ -32,7 +32,8 @@ are printed for each coefficient.}
 Returns an object of class \code{summary.lc50}, with components
 \item{\code{coefficients}}{a table of coefficients.}
 \item{\code{lc50}}{a table of LC50 for each treatment group.}
-\item{\code{bsurv}}{a table of background survival for each treatment group.}
+\item{\code{bsurv}}{optionally, a table of background survival for each treatment group.}
+\item{\code{rate}}{optionally, a table of rates for each treatment group.}
 }
 \description{
 Summary method for class "\code{lc50}".

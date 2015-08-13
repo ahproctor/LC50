@@ -6,9 +6,11 @@
 \title{Estimate LC50 for a toxin}
 \usage{
 lc50(formula, concentration, group, data, start = NULL, link = c("probit",
-  "logit"), common.background = FALSE)
+  "logit"), common.background = FALSE, rate.shrink = 0,
+  optim.control = list())
 
-lc50.fit(X, Y, conc, group, alpha, beta, gamma, link, common.background)
+lc50.fit(X, Y, conc, group, alpha, beta, gamma, link, common.background,
+  rate.shrink, optim.control = list())
 }
 \arguments{
 \item{formula}{a formula relating log LC50 to covariates
@@ -29,6 +31,10 @@ concentration of the toxin.}
 
 \item{common.background}{should a common background survival be
 estimated for each treatment group.}
+
+\item{rate.shrink}{the shrinkage penalty for the rate parameters}
+
+\item{optim.control}{control parameters for \code{optim}}
 
 \item{X}{a design matrix}
 
