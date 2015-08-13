@@ -78,6 +78,7 @@ library(LC50)
 head(toxicity)
 ```
 
+
 ### Graphical Exploration
 
 Plotting the survival fraction against concentration for each
@@ -241,3 +242,52 @@ s <- coda.samples(model,c("beta","q","lc50"),n.iter=10000,n.thin=10)
 summary(s)
 ```
 
+### Shrinkage
+
+In trials with few distinct concentrations, the rate parameters
+$\alpha_{i}$ can be poorly resolved.  When these rates are
+overestimated the confidence intervals for the LC50 can be too
+short. The `rate.shrink` parameter adds a penalty to the likelhood to
+shrink the $\alpha_{i}$ back towards zero.
+
+Without shrinkage, the estimates of some of the rate parameters for
+the toxicity data are particularly high, and the confidence intervals
+for the corresponding LC50s are not very wide.
+```{r}
+fit <- lc50(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity)
+summary(fit,rate=TRUE)
+```
+
+```{r,fig.width=7,fig.height=6}
+d.pr <- expand.grid(temperature=factor(c(12,14,16)),
+                    salinity=factor(c(31,33,35)),
+                    conc=0:90)
+d.pr$group <- with(d.pr,interaction(temperature,salinity,sep="|"))
+d.pr$survival <- predict(fit,d.pr)
+ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
+  geom_point()+
+  geom_line(aes(x=conc,y=survival,colour=group),data=d.pr)+
+  #geom_vline(aes(xintercept=LC50,colour=group),data=d.lc50)+
+  #geom_rect(aes(x=Estimate,y=0,xmin=`Lwr 95%`,xmax=`Upr 95%`,ymin=0,ymax=1,fill=group),data=d.lc50,alpha=0.2,color=NA)+
+  facet_grid(temperature~salinity)
+```
+
+With shrinkage,
+```{r}
+fit <- lc50(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity,rate.shrink=0.001)
+summary(fit,rate=TRUE)
+```
+
+```{r,fig.width=7,fig.height=6}
+d.pr <- expand.grid(temperature=factor(c(12,14,16)),
+                    salinity=factor(c(31,33,35)),
+                    conc=0:90)
+d.pr$group <- with(d.pr,interaction(temperature,salinity,sep="|"))
+d.pr$survival <- predict(fit,d.pr)
+ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
+  geom_point()+
+  geom_line(aes(x=conc,y=survival,colour=group),data=d.pr)+
+  #geom_vline(aes(xintercept=LC50,colour=group),data=d.lc50)+
+  #geom_rect(aes(x=Estimate,y=0,xmin=`Lwr 95%`,xmax=`Upr 95%`,ymin=0,ymax=1,fill=group),data=d.lc50,alpha=0.2,color=NA)+
+  facet_grid(temperature~salinity)
+```
