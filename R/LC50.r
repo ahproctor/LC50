@@ -60,6 +60,7 @@ NULL
 ##' @param link the link function for survival fractions
 ##' @param common.background should a common background survival be
 ##' estimated for each treatment group.
+##' @param optim.control control parameters for \code{optim}
 ##' @param X a design matrix
 ##' @param Y a two column matrix of responses
 ##' @param conc a vector of toxin concentrations
@@ -113,7 +114,7 @@ NULL
 ##' \item{\code{model}}{the model frame.}
 ##'
 ##' @export
-lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit"),common.background=FALSE) {
+lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit"),common.background=FALSE,optim.control=list()) {
 
   ## Record call and link function
   cl <- match.call()
@@ -143,7 +144,7 @@ lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","lo
   alpha <- start$alpha
   gamma <- if(common.background) mean(start$gamma) else start$gamma
   beta <- qr.solve(X,start$loglc50[group])
-  r <- lc50.fit(X,Y,conc,group,alpha,beta,gamma,link,common.background)
+  r <- lc50.fit(X,Y,conc,group,alpha,beta,gamma,link,common.background,optim.control)
   r <- c(r,
          list(
            xlevels=.getXlevels(mt, mf),
@@ -160,7 +161,7 @@ lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","lo
 
 ##' @rdname lc50
 ##' @importFrom MASS ginv
-lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background) {
+lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background,optim.control=list()) {
 
   ## Decompose response
   y <- Y[,1]
@@ -195,7 +196,7 @@ lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background) {
     nll
   }
   ## Minimize negative log likelihood
-  mn <- optim(c(alpha,beta,gamma),nlogL,method="BFGS",hessian=TRUE)
+  mn <- optim(c(alpha,beta,gamma),nlogL,method="BFGS",hessian=TRUE,control=optim.control)
 
   ## Basic parameters
   alpha <- mn$par[alpha.k]
