@@ -60,6 +60,7 @@ NULL
 ##' @param link the link function for survival fractions
 ##' @param common.background should a common background survival be
 ##' estimated for each treatment group.
+##' @param rate.shrink the shrinkage penalty for the rate parameters
 ##' @param optim.control control parameters for \code{optim}
 ##' @param X a design matrix
 ##' @param Y a two column matrix of responses
@@ -114,7 +115,7 @@ NULL
 ##' \item{\code{model}}{the model frame.}
 ##'
 ##' @export
-lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit"),common.background=FALSE,optim.control=list()) {
+lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit"),common.background=FALSE,rate.shrink=0,optim.control=list()) {
 
   ## Record call and link function
   cl <- match.call()
@@ -144,7 +145,7 @@ lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","lo
   alpha <- start$alpha
   gamma <- if(common.background) mean(start$gamma) else start$gamma
   beta <- qr.solve(X,start$loglc50[group])
-  r <- lc50.fit(X,Y,conc,group,alpha,beta,gamma,link,common.background,optim.control)
+  r <- lc50.fit(X,Y,conc,group,alpha,beta,gamma,link,common.background,rate.shrink,optim.control)
   r <- c(r,
          list(
            xlevels=.getXlevels(mt, mf),
@@ -152,6 +153,7 @@ lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","lo
            call=cl,
            link=link,
            common.background=common.background,
+           rate.shrink=rate.shrink,
            terms=mt,
            model=mf))
   class(r) <- "lc50"
@@ -161,7 +163,7 @@ lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","lo
 
 ##' @rdname lc50
 ##' @importFrom MASS ginv
-lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background,optim.control=list()) {
+lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background,rate.shrink,optim.control=list()) {
 
   ## Decompose response
   y <- Y[,1]
@@ -191,7 +193,7 @@ lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background,opti
     beta <- pars[beta.k]
     gamma <- rep(pars[gamma.k],length.out=ng)
     pq <- fitted.pq(alpha,beta,gamma)
-    nll <- -sum(dbinom(y,N,pq,log=TRUE))
+    nll <- -sum(dbinom(y,N,pq,log=TRUE))+rate.shrink*sum(alpha^2)
     if(!is.finite(nll)) nll <- .Machine$double.xmax
     nll
   }
@@ -449,7 +451,8 @@ anova.lc50 <- function(object,...,test = NULL)  {
       fit <- eval(call("lc50.fit",X=x[,varseq<i,drop=FALSE],
                        Y=object$y,conc=object$concentration,group=object$group,
                        alpha=object$alpha,beta=object$beta[varseq<i],gamma=object$gamma,
-                       link=object$link,common.background=object$common.background))
+                       link=object$link,common.background=object$common.background,
+                       rate.shrink=object$rate.shrink))
       resdev <- c(resdev, fit$deviance)
       resdf <- c(resdf, fit$df.residual)
     }
