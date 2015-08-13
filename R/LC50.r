@@ -340,7 +340,6 @@ summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
               lc50=lc50.table),
          object[keep])
 
-
   if(background) {
     ilink <- switch(object$link,probit=pnorm,logit=plogis)
     gamma <- object$gamma
@@ -357,7 +356,6 @@ summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
     dimnames(rate.table) <- list(names(alpha), c("Estimate","Std. Error", "Lwr 95%", "Upr 95%"))
     r$rate <- rate.table
   }
-
 
   class(r) <- c("summary.lc50")
   r
@@ -413,7 +411,7 @@ print.summary.lc50 <- function(x,digits=max(3L,getOption("digits")-3L),
 ##' are nested.) It is conventional to list the models from smallest
 ##' to largest, but this is up to the user.
 ##'
-##' When \code{test} is "LRT" or "Chissq" the table will contain test
+##' When \code{test} is "LRT" or "Chisq" the table will contain test
 ##' statistics (and P values) comparing the reduction in deviance for
 ##' the row to the residuals.
 ##'
@@ -646,15 +644,13 @@ predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...)
 
 
 
-##' Estimate LC50 from survival data in the presence of additional
+##' Bayesian estimates of LC50 from survival data in the presence of additional
 ##' stressors and non-ignorable control mortality
 ##'
-##' DESCRIBE the model.
-##'
-##' \code{lc50.fit} is the workhorse function: it is not normally
-##' called directly but can be more efficient where the response
-##' vector, design matrix and family have already been calculated.
-##'
+##' This function is an analog of \code{\link{lc50}} that produces an
+##' object of class \code{jags} which can be used to draw samples from
+##' the posterior using \code{update} and \code{coda.samples} from
+##' \package{rjags}.
 ##'
 ##' @title Estimate LC50 for a toxin
 ##' @param formula a formula relating log LC50 to covariates
@@ -713,6 +709,7 @@ lc50JAGS <- function(formula,concentration,group,data,start=NULL,link=c("probit"
   ## Index of first row of X for each group
   k <- match(levels(group),group)
   Xg <- X[k,,drop=FALSE]
+
 
   ## Define BUGS model
   if(!common.background) {
