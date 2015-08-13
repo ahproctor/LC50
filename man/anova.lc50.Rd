@@ -39,7 +39,7 @@ is also given. (This only makes statistical sense if the models
 are nested.) It is conventional to list the models from smallest
 to largest, but this is up to the user.
 
-When \code{test} is "LRT" or "Chissq" the table will contain test
+When \code{test} is "LRT" or "Chisq" the table will contain test
 statistics (and P values) comparing the reduction in deviance for
 the row to the residuals.
 }
