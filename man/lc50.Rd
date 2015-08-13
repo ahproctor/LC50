@@ -82,7 +82,8 @@ following components:
 \item{\code{x}}{a design matrix relating log lc50 to factors describing the additional stressors.}
 \item{\code{y}}{a two column matrix of responses, giving the survivals and mortalities.}
 \item{\code{fitted.values}}{the fitted probability of survival.}
-\item{\code{deviance}}{the deviance.}
+\item{\code{fitted.values}}{the deviance residuals for the fit.}
+\item{\code{deviance}}{the deviance for the fit.}
 \item{\code{df.residual}}{the residual degrees of freedom.}
 \item{\code{null.deviance}}{the deviance of the null model, which fits a single mortality rate to all data.}
 \item{\code{df.null}}{the degrees of freedom for the null model.}
