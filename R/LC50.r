@@ -653,7 +653,7 @@ predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...)
 ##' This function is an analog of \code{\link{lc50}} that produces an
 ##' object of class \code{jags} which can be used to draw samples from
 ##' the posterior using \code{update} and \code{coda.samples} from
-##' \package{rjags}.
+##' \pkg{rjags}.
 ##'
 ##' The model assumes half Normal priors for \code{alpha} and Normal
 ##' priors for \code{beta} and \code{gamma}.  For \code{alpha} and

@@ -6,7 +6,8 @@
 \usage{
 lc50JAGS(formula, concentration, group, data, start = NULL,
   link = c("probit", "logit"), common.background = FALSE, n.adapt = 500,
-  n.chains = 4)
+  n.chains = 4, alpha.mu = 0, alpha.tau = 0.001, beta.mu = 0,
+  beta.tau = 0.001, gamma.mu = 0, gamma.tau = 0.001)
 }
 \arguments{
 \item{formula}{a formula relating log LC50 to covariates
@@ -31,6 +32,21 @@ estimated for each treatment group.}
 \item{n.adapt}{parameter passed to \code{jags.model}}
 
 \item{n.chains}{parameter passed to \code{jags.model}}
+
+\item{alpha.mu}{prior mean for alpha}
+
+\item{alpha.tau}{prior precision for alpha}
+
+\item{beta.mu}{either a single prior mean for all beta parameters,
+or a vector of prior means, one for each parameter.}
+
+\item{beta.tau}{either a single prior precision for all beta
+parameters, or a vector of prior precisions, one for each
+parameter.}
+
+\item{gamma.mu}{prior mean for gamma}
+
+\item{gamma.tau}{prior precision for gamma}
 }
 \value{
 Returns an object inheriting from class \code{jags} which
@@ -38,14 +54,18 @@ can be used to generate dependent samples from the posterior
 distribution of the parameters
 }
 \description{
-Estimate LC50 from survival data in the presence of additional
+Bayesian estimates of LC50 from survival data in the presence of additional
 stressors and non-ignorable control mortality
 }
 \details{
-DESCRIBE the model.
+This function is an analog of \code{\link{lc50}} that produces an
+object of class \code{jags} which can be used to draw samples from
+the posterior using \code{update} and \code{coda.samples} from
+\pkg{rjags}.
 
-\code{lc50.fit} is the workhorse function: it is not normally
-called directly but can be more efficient where the response
-vector, design matrix and family have already been calculated.
+The model assumes half Normal priors for \code{alpha} and Normal
+priors for \code{beta} and \code{gamma}.  For \code{alpha} and
+\code{gamma}, a single prior mean and precision is assumed for all
+groups, for \code{beta} individual prior means and precisions can be specified
 }
 
