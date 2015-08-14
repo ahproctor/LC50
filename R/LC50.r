@@ -690,9 +690,9 @@ predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...)
 ##' @export
 lc50JAGS <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit"),
                      common.background=FALSE,n.adapt=500,n.chains=4,
-                     alpha.mu=0,alpha.tau=0.001,
-                     beta.mu=0,beta.tau=0.001,
-                     gamma.mu=0,gamma.tau=0.001) {
+                     alpha.mu=0,alpha.tau=0.0001,
+                     beta.mu=0,beta.tau=0.0001,
+                     gamma.mu=0,gamma.tau=0.0001) {
 
   if(!requireNamespace("rjags",quietly=TRUE)) {
     stop("lc50Jags requires the rjags package to be installed", call. = FALSE)
