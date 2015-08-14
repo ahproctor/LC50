@@ -10,7 +10,8 @@ Depends: R(>= 3.0.1)
 Suggests:
     ggplot2,
     knitr,
-    multcomp
+    multcomp,
+    rjags
 Imports:
     stats,
     MASS

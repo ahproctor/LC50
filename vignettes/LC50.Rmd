@@ -137,9 +137,11 @@ summary(fit)
 
 The table of lethal concentrations can be extracted from the summary and displayed graphically
 ```{r,fig.width=7,fig.height=6}
-lc50 <- as.data.frame(summary(fit)$lc50)
-lc50 <- cbind(group=rownames(lc50),lc50)
-ggplot(lc50,aes(x=group,y=LC50))+
+d.lc50 <- with(summary(fit),
+               cbind(lc50,
+                     toxicity[match(rownames(lc50),toxicity$group),
+                              c("group","salinity","temperature")]))
+ggplot(d.lc50,aes(x=group,y=LC50))+
   geom_linerange(mapping=aes(x=group,ymin=`Lwr 95%`,ymax=`Upr 95%`),col="dodgerblue1",lwd=3)+
   geom_point()
 ```
@@ -154,10 +156,10 @@ d.pr$survival <- predict(fit,d.pr)
 ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
   geom_point()+
   geom_line(aes(x=conc,y=survival,colour=group),data=d.pr)+
+  #geom_vline(aes(xintercept=LC50,colour=group),data=d.lc50)+
+  #geom_rect(aes(x=Estimate,y=0,xmin=`Lwr 95%`,xmax=`Upr 95%`,ymin=0,ymax=1,fill=group),data=d.lc50,alpha=0.2,color=NA)+
   facet_grid(temperature~salinity)
 ```
-
-
 
 The confidence intervals shown in the summary are based on an
 asymptotic approximation and can be unreliable in small samples.  As
@@ -195,7 +197,7 @@ ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
 ### Multiple Comparisons
 
 Multiplicity adjusted pairwise comparison tests can be constructed with
-`glht` from the `multcomp` package.
+`glht` from the **multcomp** package.
 ```{r,warning=FALSE}
 library(multcomp)
 mc <- glht(fit,linfct=mcp(salinity="Tukey",temperature="Tukey"))
@@ -212,4 +214,30 @@ taking exponentials
 exp(confint(mc)$confint)
 ```
 
+
+### Bayesian Estimates
+
+If **JAGS** and the **rjags** package are installed, Bayesian
+estimates of LC50 can be obtained with `lc50JAGS`.  This function is
+an analog of `lc50` that constructs an object of class `jags` that can
+be used to sample from the posterior for the model using the
+facilities of the **rjags** package.
+
+To generate Bayesian estimates for the reduced model, `lc50JAGS` is
+used to generate a model object
+```{r}
+library(rjags)
+model <- lc50JAGS(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity)
+```
+and an initial burn-in sample is drawn
+```{r}
+update(model,1000)
+```
+A final sample is then drawn and stored.  It is possible to sample for
+any of the model variables "alpha", "beta", "gamma", "lc50",
+"loglc50", "p" or "q" as required.
+```{r}
+s <- coda.samples(model,c("beta","q","lc50"),n.iter=10000,n.thin=10)
+summary(s)
+```
 

@@ -60,6 +60,7 @@ NULL
 ##' @param link the link function for survival fractions
 ##' @param common.background should a common background survival be
 ##' estimated for each treatment group.
+##' @param optim.control control parameters for \code{optim}
 ##' @param X a design matrix
 ##' @param Y a two column matrix of responses
 ##' @param conc a vector of toxin concentrations
@@ -100,7 +101,8 @@ NULL
 ##' \item{\code{x}}{a design matrix relating log lc50 to factors describing the additional stressors.}
 ##' \item{\code{y}}{a two column matrix of responses, giving the survivals and mortalities.}
 ##' \item{\code{fitted.values}}{the fitted probability of survival.}
-##' \item{\code{deviance}}{the deviance.}
+##' \item{\code{residuals}}{the deviance residuals for the fit.}
+##' \item{\code{deviance}}{the deviance for the fit.}
 ##' \item{\code{df.residual}}{the residual degrees of freedom.}
 ##' \item{\code{null.deviance}}{the deviance of the null model, which fits a single mortality rate to all data.}
 ##' \item{\code{df.null}}{the degrees of freedom for the null model.}
@@ -113,7 +115,7 @@ NULL
 ##' \item{\code{model}}{the model frame.}
 ##'
 ##' @export
-lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit"),common.background=FALSE) {
+lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit"),common.background=FALSE,optim.control=list()) {
 
   ## Record call and link function
   cl <- match.call()
@@ -141,9 +143,9 @@ lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","lo
   ## Fit separate models to each group to generate initial parameter estimates
   if(is.null(start)) start <- lc50.initialize(Y,conc,group)
   alpha <- start$alpha
-  gamma <- start$gamma
+  gamma <- if(common.background) mean(start$gamma) else start$gamma
   beta <- qr.solve(X,start$loglc50[group])
-  r <- lc50.fit(X,Y,conc,group,alpha,beta,gamma,link,common.background)
+  r <- lc50.fit(X,Y,conc,group,alpha,beta,gamma,link,common.background,optim.control)
   r <- c(r,
          list(
            xlevels=.getXlevels(mt, mf),
@@ -160,7 +162,7 @@ lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","lo
 
 ##' @rdname lc50
 ##' @importFrom MASS ginv
-lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background) {
+lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background,optim.control=list()) {
 
   ## Decompose response
   y <- Y[,1]
@@ -195,7 +197,7 @@ lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background) {
     nll
   }
   ## Minimize negative log likelihood
-  mn <- optim(c(alpha,beta,gamma),nlogL,method="BFGS",hessian=TRUE)
+  mn <- optim(c(alpha,beta,gamma),nlogL,method="BFGS",hessian=TRUE,control=optim.control)
 
   ## Basic parameters
   alpha <- mn$par[alpha.k]
@@ -222,6 +224,7 @@ lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background) {
 
   ## Compute the deviance
   fitted <- fitted.pq(alpha,beta,gamma)
+  residuals <- sign(y/N-fitted)*sqrt(abs(2*(dbinom(y,N,fitted,log=T)-dbinom(y,N,y/N,log=T))))
   deviance <- -2*sum(dbinom(y,N,fitted,log=T)-dbinom(y,N,y/N,log=T))
   df.residual <- nrow(X)-(ncol(X)+ng)
   null.deviance <- -2*sum(dbinom(y,N,sum(y)/sum(N),log=T)-dbinom(y,N,y/N,log=T))
@@ -245,6 +248,7 @@ lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background) {
             x=X,
             y=Y,
             fitted.values=fitted,
+            residuals=residuals,
             deviance=deviance,
             df.residual=df.residual,
             null.deviance=null.deviance,
@@ -317,7 +321,8 @@ print.lc50 <- function(x,digits = max(3L, getOption("digits") - 3L),...) {
 ##' @return Returns an object of class \code{summary.lc50}, with components
 ##' \item{\code{coefficients}}{a table of coefficients.}
 ##' \item{\code{lc50}}{a table of LC50 for each treatment group.}
-##' \item{\code{bsurv}}{a table of background survival for each treatment group.}
+##' \item{\code{bsurv}}{optionally, a table of background survival for each treatment group.}
+##' \item{\code{rate}}{optionally, a table of rates for each treatment group.}
 ##' @export
 summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
 
@@ -338,24 +343,22 @@ summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
               lc50=lc50.table),
          object[keep])
 
-
   if(background) {
     ilink <- switch(object$link,probit=pnorm,logit=plogis)
     gamma <- object$gamma
     gamma.se <- sqrt(diag(object$gamma.cov))
-    bsurv.table <- cbind(gamma,gamma.se,ilink(gamma),ilink(gamma-1.96*gamma.se),ilink(gamma-1.96*gamma.se))
-    dimnames(bsurv.table) <- list(names(gamma), c("Estimate","Std. Error", "B Surv", "Lwr 95%", "Upr 95%"))
+    bsurv.table <- cbind(gamma,gamma.se,ilink(gamma),ilink(gamma-1.96*gamma.se),ilink(gamma+1.96*gamma.se))
+    dimnames(bsurv.table) <- list(names(gamma), c("Estimate","Std. Error", "Survival", "Lwr 95%", "Upr 95%"))
     r$bsurv <- bsurv.table
   }
 
   if(rate) {
     alpha <- object$alpha
     alpha.se <- sqrt(diag(object$alpha.cov))
-    rate.table <- cbind(alpha,alpha.se,alpha-1.96*alpha.se,alpha-1.96*alpha.se)
+    rate.table <- cbind(alpha,alpha.se,alpha-1.96*alpha.se,alpha+1.96*alpha.se)
     dimnames(rate.table) <- list(names(alpha), c("Estimate","Std. Error", "Lwr 95%", "Upr 95%"))
     r$rate <- rate.table
   }
-
 
   class(r) <- c("summary.lc50")
   r
@@ -411,7 +414,7 @@ print.summary.lc50 <- function(x,digits=max(3L,getOption("digits")-3L),
 ##' are nested.) It is conventional to list the models from smallest
 ##' to largest, but this is up to the user.
 ##'
-##' When \code{test} is "LRT" or "Chissq" the table will contain test
+##' When \code{test} is "LRT" or "Chisq" the table will contain test
 ##' statistics (and P values) comparing the reduction in deviance for
 ##' the row to the residuals.
 ##'
@@ -642,3 +645,182 @@ predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...)
   ifelse(conc>0,p*q,q)
 }
 
+
+
+##' Bayesian estimates of LC50 from survival data in the presence of additional
+##' stressors and non-ignorable control mortality
+##'
+##' This function is an analog of \code{\link{lc50}} that produces an
+##' object of class \code{jags} which can be used to draw samples from
+##' the posterior using \code{update} and \code{coda.samples} from
+##' \pkg{rjags}.
+##'
+##' The model assumes half Normal priors for \code{alpha} and Normal
+##' priors for \code{beta} and \code{gamma}.  For \code{alpha} and
+##' \code{gamma}, a single prior mean and precision is assumed for all
+##' groups, for \code{beta} individual prior means and precisions can be specified
+##'
+##' @title Estimate LC50 for a toxin
+##' @param formula a formula relating log LC50 to covariates
+##' describing the aditional stressors.
+##' @param concentration the name of variable that is the
+##' concentration of the toxin.
+##' @param group a factor distinguishing treatment groups for the additional stressors.
+##' @param data data frame containing variables in the model.
+##' @param start Starting values used to initialize the model.  If
+##' \code{start=NULL} these parameters are determined by
+##' \code{\link{lc50.initialize}}.
+##' @param link the link function for survival fractions
+##' @param common.background should a common background survival be
+##' estimated for each treatment group.
+##' @param n.adapt parameter passed to \code{jags.model}
+##' @param n.chains parameter passed to \code{jags.model}
+##' @param alpha.mu prior mean for alpha
+##' @param alpha.tau prior precision for alpha
+##' @param beta.mu either a single prior mean for all beta parameters,
+##' or a vector of prior means, one for each parameter.
+##' @param beta.tau either a single prior precision for all beta
+##' parameters, or a vector of prior precisions, one for each
+##' parameter.
+##' @param gamma.mu prior mean for gamma
+##' @param gamma.tau prior precision for gamma
+##' @return Returns an object inheriting from class \code{jags} which
+##' can be used to generate dependent samples from the posterior
+##' distribution of the parameters
+##' @export
+lc50JAGS <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit"),
+                     common.background=FALSE,n.adapt=500,n.chains=4,
+                     alpha.mu=0,alpha.tau=0.001,
+                     beta.mu=0,beta.tau=0.001,
+                     gamma.mu=0,gamma.tau=0.001) {
+
+  if(!requireNamespace("rjags",quietly=TRUE)) {
+    stop("lc50Jags requires the rjags package to be installed", call. = FALSE)
+  }
+
+  ## Record call and link function
+  cl <- match.call()
+  link <- match.arg(link)
+
+  ## Create the model frame and terms
+  mf <- match.call(expand.dots = FALSE)
+  m <- match(c("formula", "concentration", "group", "data"), names(mf), 0L)
+  mf <- mf[c(1L, m)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1L]] <- quote(stats::model.frame)
+  mf <- eval(mf, parent.frame())
+  mt <- attr(mf,"terms")
+
+  ## Create the model matrix and response
+  X <- model.matrix(mt,mf)
+  Y <- model.response(mf)
+
+  ## Extract concentrations
+  conc <- mf[,"(concentration)"]
+
+  ## Determine the treatment groups
+  group <- as.factor(mf[,"(group)"])
+
+  ## Check lengths of prior hyper parameters for beta
+  if(!(length(beta.mu)==1 || length(beta.mu)==ncol(X)))
+    stop("Vector of prior means for beta is wrong length")
+  beta.mu <- rep(beta.mu,length.out=ncol(X))
+
+  if(!(length(beta.tau)==1 || length(beta.tau)==ncol(X)))
+    stop("Vector of prior precisions for beta is wrong length")
+  beta.tau <- rep(beta.tau,length.out=ncol(X))
+
+  ## Fit separate models to each group to generate initial parameter estimates
+  if(is.null(start)) start <- lc50.initialize(Y,conc,group)
+  start$beta <- qr.solve(X,start$loglc50[group])
+  if(common.background) start$gamma <- mean(start$gamma)
+
+  ## Index of first row of X for each group
+  k <- match(levels(group),group)
+  Xg <- X[k,,drop=FALSE]
+
+
+  ## Define BUGS model
+  if(!common.background) {
+
+    bugs.model <- paste("
+model {
+  ## Likelihood
+  for(i in 1:N) {
+    alive[i] ~ dbin(pi[i],total[i])
+    pi[i] <- q[group[i]]*ifelse(zero[i]>0,1,p[i])
+    ",link,"(p[i]) <- alpha[group[i]]*(log(conc[i]+zero[i]) - loglc50[group[i]])
+  }
+
+  loglc50 <- X %*% beta
+  for(i in 1:Ngroup) {
+    log(lc50[i]) <- loglc50[i]
+    ",link,"(q[i]) <- gamma[i]
+  }
+
+  ## Priors
+  for(i in 1:Ngroup) {
+    ## alpha's must be negative
+    alpha[i] ~ dnorm(alpha.mu,alpha.tau)T(,0)
+  }
+  for(i in 1:Ncoef) {
+    beta[i] ~ dnorm(beta.mu[i],beta.tau[i])
+  }
+  for(i in 1:Ngroup) {
+    gamma[i] ~ dnorm(gamma.mu,gamma.tau)
+  }
+}",sep="")
+
+  } else {
+
+    bugs.model <- paste("
+model {
+  ## Likelihood
+  for(i in 1:N) {
+    alive[i] ~ dbin(pi[i],total[i])
+    pi[i] <- q*ifelse(zero[i]>0,1,p[i])
+    ",link,"(p[i]) <- alpha[group[i]]*(log(conc[i]+zero[i]) - loglc50[group[i]])
+  }
+
+  loglc50 <- X %*% beta
+  for(i in 1:Ngroup) {
+    log(lc50[i]) <- loglc50[i]
+  }
+  ",link,"(q) <- gamma
+
+  ## Priors
+  for(i in 1:Ngroup) {
+    ## alpha's must be negative
+    alpha[i] ~ dnorm(alpha.mu,alpha.tau)T(,0)
+  }
+  for(i in 1:Ncoef) {
+    beta[i] ~ dnorm(beta.mu[i],beta.tau[i])
+  }
+  gamma ~ dnorm(gamma.mu,gamma.tau)
+}",sep="")
+
+  }
+
+  model <- rjags::jags.model(textConnection(bugs.model),
+                      data = list(
+                        "alive" = Y[,1],
+                        "total" = rowSums(Y),
+                        "conc" = conc,
+                        "group" = group,
+                        "zero" = as.numeric(conc==0),
+                        "X" = Xg,
+                        "N" = nrow(Y),
+                        "Ncoef" = ncol(X),
+                        "Ngroup" = nlevels(group),
+                        "alpha.mu" = alpha.mu,
+                        "alpha.tau" = alpha.tau,
+                        "beta.mu" = beta.mu,
+                        "beta.tau" = beta.tau,
+                        "gamma.mu" = gamma.mu,
+                        "gamma.tau" = gamma.tau),
+                      inits=start[c("alpha","beta","gamma")],
+                      n.chains = n.chains,
+                      n.adapt = n.adapt)
+
+  model
+}
