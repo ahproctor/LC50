@@ -71,7 +71,7 @@ following components:
 \item{\code{gamma}}{a vector of background survival coefficients.}
 \item{\code{gamma.cov}}{covariance of the background survival coefficients.}
 \item{\code{coefficients}}{a named vector of lc50 model coefficients.}
-\item{\code{cov.scaled}}{covariance of the lc50 model coefficients.}
+\item{\code{cov.unscaled}}{covariance of the lc50 model coefficients.}
 \item{\code{loglc50}}{a named vector of log lc50s for the treatment groups.}
 \item{\code{loglc50.cov}}{covariance of the lc50s for the treatment groups.}
 \item{\code{concentration}}{a vector of taxin concentrations.}
@@ -82,6 +82,7 @@ following components:
 \item{\code{residuals}}{the deviance residuals for the fit.}
 \item{\code{deviance}}{the deviance for the fit.}
 \item{\code{df.residual}}{the residual degrees of freedom.}
+\item{\code{dispersion}}{the dispersion.}
 \item{\code{null.deviance}}{the deviance of the null model, which fits a single mortality rate to all data.}
 \item{\code{df.null}}{the degrees of freedom for the null model.}
 \item{\code{optim}}{the result of the call to \code{optim}.}
