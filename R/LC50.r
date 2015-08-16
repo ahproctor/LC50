@@ -564,6 +564,7 @@ model.frame.lc50 <- function(formula, ...)  {
 ##' @importFrom stats simulate
 ##' @export
 simulate.lc50 <- function(object, nsim=1, seed=NULL, ...) {
+  if(object$quasi) stop("Cannot simulate from a quasi model")
   if (!exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
     runif(1)
   if (is.null(seed))
