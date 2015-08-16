@@ -6,8 +6,8 @@
 \usage{
 lc50JAGS(formula, concentration, group, data, start = NULL,
   link = c("probit", "logit"), common.background = FALSE, n.adapt = 500,
-  n.chains = 4, alpha.mu = 0, alpha.tau = 0.001, beta.mu = 0,
-  beta.tau = 0.001, gamma.mu = 0, gamma.tau = 0.001)
+  n.chains = 4, alpha.mu = 0, alpha.tau = 1e-04, beta.mu = 0,
+  beta.tau = 1e-04, gamma.mu = 0, gamma.tau = 1e-04)
 }
 \arguments{
 \item{formula}{a formula relating log LC50 to covariates

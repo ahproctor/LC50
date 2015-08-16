@@ -93,7 +93,7 @@ NULL
 ##' \item{\code{gamma}}{a vector of background survival coefficients.}
 ##' \item{\code{gamma.cov}}{covariance of the background survival coefficients.}
 ##' \item{\code{coefficients}}{a named vector of lc50 model coefficients.}
-##' \item{\code{cov.scaled}}{covariance of the lc50 model coefficients.}
+##' \item{\code{cov.unscaled}}{covariance of the lc50 model coefficients.}
 ##' \item{\code{loglc50}}{a named vector of log lc50s for the treatment groups.}
 ##' \item{\code{loglc50.cov}}{covariance of the lc50s for the treatment groups.}
 ##' \item{\code{concentration}}{a vector of taxin concentrations.}
@@ -104,6 +104,7 @@ NULL
 ##' \item{\code{residuals}}{the deviance residuals for the fit.}
 ##' \item{\code{deviance}}{the deviance for the fit.}
 ##' \item{\code{df.residual}}{the residual degrees of freedom.}
+##' \item{\code{dispersion}}{the dispersion.}
 ##' \item{\code{null.deviance}}{the deviance of the null model, which fits a single mortality rate to all data.}
 ##' \item{\code{df.null}}{the degrees of freedom for the null model.}
 ##' \item{\code{optim}}{the result of the call to \code{optim}.}
@@ -226,9 +227,11 @@ lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background,opti
   fitted <- fitted.pq(alpha,beta,gamma)
   residuals <- sign(y/N-fitted)*sqrt(abs(2*(dbinom(y,N,fitted,log=T)-dbinom(y,N,y/N,log=T))))
   deviance <- -2*sum(dbinom(y,N,fitted,log=T)-dbinom(y,N,y/N,log=T))
-  df.residual <- nrow(X)-(ncol(X)+ng)
+  df.residual <- nrow(X)-(length(alpha.k)+length(beta.k)+length(gamma.k))
   null.deviance <- -2*sum(dbinom(y,N,sum(y)/sum(N),log=T)-dbinom(y,N,y/N,log=T))
-  df.null <- nrow(X)-(1+ng)
+  df.null <- nrow(X)-(length(alpha.k)+1+length(gamma.k))
+
+  dispersion <- 1
   aic <- 2*(length(mn$par)+mn$value)
 
   r <- list(logLik=-mn$value,
@@ -240,7 +243,7 @@ lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background,opti
             gamma=gamma,
             gamma.cov=gamma.cov,
             coefficients=beta,
-            cov.scaled=beta.cov,
+            cov.unscaled=beta.cov,
             loglc50=loglc50,
             loglc50.cov=loglc50.cov,
             concentration=conc,
@@ -250,6 +253,7 @@ lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background,opti
             fitted.values=fitted,
             residuals=residuals,
             deviance=deviance,
+            dispersion=dispersion,
             df.residual=df.residual,
             null.deviance=null.deviance,
             df.null=df.null,
@@ -326,16 +330,17 @@ print.lc50 <- function(x,digits = max(3L, getOption("digits") - 3L),...) {
 ##' @export
 summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
 
-  keep <- match(c("call","deviance","aic","contrasts","df.residual","null.deviance","df.null"),names(object),0L)
+  keep <- match(c("call","deviance","aic","dispersion","contrasts",
+                  "df.residual","null.deviance","df.null"),names(object),0L)
   cf <- object$coefficients
-  cf.se <- sqrt(diag(object$cov.scaled))
+  cf.se <- sqrt(diag(object$dispersion*object$cov.unscaled))
   zvalue <- abs(cf)/cf.se
   pvalue <- pvalue <- 2*pnorm(-abs(zvalue))
   coef.table <- cbind(cf, cf.se, zvalue, pvalue)
   dimnames(coef.table) <- list(names(cf), c("Estimate","Std. Error","z value","Pr(>|z|)"))
 
   loglc50 <- object$loglc50
-  loglc50.se <- sqrt(diag(object$loglc50.cov))
+  loglc50.se <- sqrt(diag(object$dispersion*object$loglc50.cov))
   lc50.table <- cbind(loglc50, loglc50.se, exp(loglc50), exp(loglc50-1.96*loglc50.se), exp(loglc50+1.96*loglc50.se))
   dimnames(lc50.table) <- list(names(loglc50), c("Estimate","Std. Error", "LC50", "Lwr 95%", "Upr 95%"))
 
@@ -346,7 +351,7 @@ summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
   if(background) {
     ilink <- switch(object$link,probit=pnorm,logit=plogis)
     gamma <- object$gamma
-    gamma.se <- sqrt(diag(object$gamma.cov))
+    gamma.se <- sqrt(diag(object$dispersion*object$gamma.cov))
     bsurv.table <- cbind(gamma,gamma.se,ilink(gamma),ilink(gamma-1.96*gamma.se),ilink(gamma+1.96*gamma.se))
     dimnames(bsurv.table) <- list(names(gamma), c("Estimate","Std. Error", "Survival", "Lwr 95%", "Upr 95%"))
     r$bsurv <- bsurv.table
@@ -354,7 +359,7 @@ summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
 
   if(rate) {
     alpha <- object$alpha
-    alpha.se <- sqrt(diag(object$alpha.cov))
+    alpha.se <- sqrt(diag(object$dispersion*object$alpha.cov))
     rate.table <- cbind(alpha,alpha.se,alpha-1.96*alpha.se,alpha+1.96*alpha.se)
     dimnames(rate.table) <- list(names(alpha), c("Estimate","Std. Error", "Lwr 95%", "Upr 95%"))
     r$rate <- rate.table
@@ -373,7 +378,7 @@ print.summary.lc50 <- function(x,digits=max(3L,getOption("digits")-3L),
   cat("\nCall:\n",paste(deparse(x$call),sep="\n",collapse="\n"),"\n\n",sep="")
   cat("\nCoefficients:\n")
   printCoefmat(x$coefficients,digits=digits,signif.stars=signif.stars,na.print="NA",...)
-  cat("\n",
+  cat("\n(Dispersion parameter taken to be ", format(x$dispersion), ")\n\n",
       apply(cbind(paste(format(c("Null", "Residual"), justify = "right"), "deviance:"),
                   format(unlist(x[c("null.deviance", "deviance")]), digits = max(5L, digits + 1L)),
                   " on",
@@ -516,7 +521,7 @@ coef.lc50 <- function(object,...) {
 ## This is ripped off from vcov.glm
 ##' @export
 vcov.lc50 <- function(object,...) {
-  object$cov.scaled
+  object$dispersion*object$cov.unscaled
 }
 
 ## This is ripped off from model.matrix.lm
