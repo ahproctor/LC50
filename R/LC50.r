@@ -58,6 +58,7 @@ NULL
 ##' \code{start=NULL} these parameters are determined by
 ##' \code{\link{lc50.initialize}}.
 ##' @param link the link function for survival fractions
+##' @param quasi should a quasibinomial model be fitted.
 ##' @param common.background should a common background survival be
 ##' estimated for each treatment group.
 ##' @param optim.control control parameters for \code{optim}
@@ -112,11 +113,14 @@ NULL
 ##' \item{\code{contrasts}}{the contrasts used.}
 ##' \item{\code{call}}{the matched call.}
 ##' \item{\code{link}}{the link function.}
+##' \item{\code{quasi}}{is the dispersion estimated.}
 ##' \item{\code{terms}}{the terms object used.}
 ##' \item{\code{model}}{the model frame.}
 ##'
 ##' @export
-lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit"),common.background=FALSE,optim.control=list()) {
+lc50 <- function(formula,concentration,group,data,start=NULL,
+                 link=c("probit","logit"),quasi=FALSE,
+                 common.background=FALSE,optim.control=list()) {
 
   ## Record call and link function
   cl <- match.call()
@@ -146,13 +150,14 @@ lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","lo
   alpha <- start$alpha
   gamma <- if(common.background) mean(start$gamma) else start$gamma
   beta <- qr.solve(X,start$loglc50[group])
-  r <- lc50.fit(X,Y,conc,group,alpha,beta,gamma,link,common.background,optim.control)
+  r <- lc50.fit(X,Y,conc,group,alpha,beta,gamma,link,quasi,common.background,optim.control)
   r <- c(r,
          list(
            xlevels=.getXlevels(mt, mf),
            contrasts=attr(X,"contrasts"),
            call=cl,
            link=link,
+           quasi=quasi,
            common.background=common.background,
            terms=mt,
            model=mf))
@@ -163,7 +168,8 @@ lc50 <- function(formula,concentration,group,data,start=NULL,link=c("probit","lo
 
 ##' @rdname lc50
 ##' @importFrom MASS ginv
-lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background,optim.control=list()) {
+lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,
+                     quasi=FALSE,common.background=FALSE,optim.control=list()) {
 
   ## Decompose response
   y <- Y[,1]
@@ -230,9 +236,8 @@ lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,common.background,opti
   df.residual <- nrow(X)-(length(alpha.k)+length(beta.k)+length(gamma.k))
   null.deviance <- -2*sum(dbinom(y,N,sum(y)/sum(N),log=T)-dbinom(y,N,y/N,log=T))
   df.null <- nrow(X)-(length(alpha.k)+1+length(gamma.k))
-
-  dispersion <- 1
-  aic <- 2*(length(mn$par)+mn$value)
+  dispersion <- if(quasi) sum((y-N*fitted)^2/(N*fitted*(1-fitted)))/df.residual else 1
+  aic <- if(quasi) NA else 2*(length(mn$par)+mn$value)
 
   r <- list(logLik=-mn$value,
             aic=aic,
@@ -471,9 +476,9 @@ anova.lc50 <- function(object,...,test = NULL)  {
   title <- paste0("Analysis of Deviance Table",
                   "\n\nResponse: ", as.character(varlist[-1L])[1L],
                   "\n\nTerms added sequentially (first to last)\n\n")
-  df.dispersion <- object$df.residual
+  df.dispersion <- if(object$quasi) object$df.residual else Inf
   if (!is.null(test))
-    table <- stat.anova(table=table,test=test,scale=1,df.scale=df.dispersion,n=NROW(x))
+    table <- stat.anova(table=table,test=test,scale=object$dispersion,df.scale=df.dispersion,n=NROW(x))
   structure(table, heading = title, class = c("anova", "data.frame"))
 }
 
@@ -502,8 +507,8 @@ anova.lc50list <- function (object, ..., test = NULL) {
   topnote <- paste("Model ", format(1L:nmodels), ": ", variables, sep = "", collapse = "\n")
   if (!is.null(test)) {
     bigmodel <- object[[order(resdf)[1L]]]
-    df.dispersion <- min(resdf)
-    table <- stat.anova(table=table,test=test,scale=1,
+    df.dispersion <- if(bigmodel$quasi) bigmodel$df.residual else Inf
+    table <- stat.anova(table=table,test=test,scale=bigmodel$dispersion,
                         df.scale=df.dispersion,n=length(bigmodel$residuals))
   }
   structure(table, heading = c(title, topnote), class = c("anova", "data.frame"))
@@ -559,6 +564,7 @@ model.frame.lc50 <- function(formula, ...)  {
 ##' @importFrom stats simulate
 ##' @export
 simulate.lc50 <- function(object, nsim=1, seed=NULL, ...) {
+  if(object$quasi) stop("Cannot simulate from a quasi model")
   if (!exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
     runif(1)
   if (is.null(seed))

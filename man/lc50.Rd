@@ -6,10 +6,11 @@
 \title{Estimate LC50 for a toxin}
 \usage{
 lc50(formula, concentration, group, data, start = NULL, link = c("probit",
-  "logit"), common.background = FALSE, optim.control = list())
-
-lc50.fit(X, Y, conc, group, alpha, beta, gamma, link, common.background,
+  "logit"), quasi = FALSE, common.background = FALSE,
   optim.control = list())
+
+lc50.fit(X, Y, conc, group, alpha, beta, gamma, link, quasi = FALSE,
+  common.background = FALSE, optim.control = list())
 }
 \arguments{
 \item{formula}{a formula relating log LC50 to covariates
@@ -27,6 +28,8 @@ concentration of the toxin.}
 \code{\link{lc50.initialize}}.}
 
 \item{link}{the link function for survival fractions}
+
+\item{quasi}{should a quasibinomial model be fitted.}
 
 \item{common.background}{should a common background survival be
 estimated for each treatment group.}
@@ -90,6 +93,7 @@ following components:
 \item{\code{contrasts}}{the contrasts used.}
 \item{\code{call}}{the matched call.}
 \item{\code{link}}{the link function.}
+\item{\code{quasi}}{is the dispersion estimated.}
 \item{\code{terms}}{the terms object used.}
 \item{\code{model}}{the model frame.}
 }
