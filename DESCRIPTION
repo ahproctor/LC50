@@ -6,7 +6,8 @@ Date: 2015-07-31
 Authors@R: as.person(c(
     "Abigael Proctor <Abigael.Proctor@aad.gov.au> [aut, cre]",
     "Simon Wotherspoon <Simon.Wotherspoon@utas.edu.au> [aut]"))
-Depends: R(>= 3.0.1)
+Depends:
+    R(>= 3.0.1)
 Suggests:
     ggplot2,
     knitr,
@@ -21,3 +22,4 @@ ByteCompile: yes
 License: GPL-3
 LazyData: TRUE
 VignetteBuilder: knitr
+RoxygenNote: 5.0.0
