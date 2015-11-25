@@ -37,18 +37,18 @@ NULL
 "toxicity"
 
 
-##' Estimate LC50 from survival data in the presence of additional
+##' Estimate LCx from survival data in the presence of additional
 ##' stressors and non-ignorable control mortality
 ##'
 ##' DESCRIBE the model.
 ##'
-##' \code{lc50.fit} is the workhorse function: it is not normally
+##' \code{lcx.fit} is the workhorse function: it is not normally
 ##' called directly but can be more efficient where the response
 ##' vector, design matrix and family have already been calculated.
 ##'
 ##'
-##' @title Estimate LC50 for a toxin
-##' @param formula a formula relating log LC50 to covariates
+##' @title Estimate LCx for a toxin
+##' @param formula a formula relating log LCx to covariates
 ##' describing the aditional stressors.
 ##' @param concentration the name of variable that is the
 ##' concentration of the toxin.
@@ -56,8 +56,9 @@ NULL
 ##' @param data data frame containing variables in the model.
 ##' @param start Starting values used to initialize the model.  If
 ##' \code{start=NULL} these parameters are determined by
-##' \code{\link{lc50.initialize}}.
+##' \code{\link{lcx.initialize}}.
 ##' @param link the link function for survival fractions
+##' @param lethal the modelled level of lethality
 ##' @param quasi should a quasibinomial model be fitted.
 ##' @param common.background should a common background survival be
 ##' estimated for each treatment group.
@@ -70,37 +71,37 @@ NULL
 ##' @param beta vector of starting coefficients
 ##' @param gamma vector of background survival parameters
 ##'
-##' @return \code{lc50} returns an object of class inheriting from
-##' "lc50". See later in this section.
+##' @return \code{lcx} returns an object of class inheriting from
+##' "lcx". See later in this section.
 ##'
 ##' The function \code{\link{summary}} (i.e.,
-##' \code{link{summary.lc50}}) can be used to obtain or print a
+##' \code{link{summary.lcx}}) can be used to obtain or print a
 ##' summary of the results and the function \code{\link{anova}} (i.e.,
-##' \code{\link{anova.lc50}}) to produce an analysis of deviance table
+##' \code{\link{anova.lcx}}) to produce an analysis of deviance table
 ##' for the tests of additional stressor effects.
 ##'
-##' An LC50 model has several sets of coefficients, the generic
+##' An LCx model has several sets of coefficients, the generic
 ##' accessor function \code{\link{coef}} returns only the beta
 ##' coeffients.
 ##'
-##' An object of class "lc50" is a list containing at least the
+##' An object of class "lcx" is a list containing at least the
 ##' following components:
 ##'
 ##' \item{\code{logLik}}{the maximized log likelihood.}
 ##' \item{\code{aic}}{Akaike's information criteria.}
 ##' \item{\code{alpha}}{a vector of rate coefficients.}
 ##' \item{\code{alpha.cov}}{covariance of the rate coefficients.}
-##' \item{\code{beta}}{a named vector of lc50 model coefficients.}
-##' \item{\code{beta.cov}}{covariance of the lc50 model coefficients.}
+##' \item{\code{beta}}{a named vector of lcx model coefficients.}
+##' \item{\code{beta.cov}}{covariance of the lcx model coefficients.}
 ##' \item{\code{gamma}}{a vector of background survival coefficients.}
 ##' \item{\code{gamma.cov}}{covariance of the background survival coefficients.}
-##' \item{\code{coefficients}}{a named vector of lc50 model coefficients.}
-##' \item{\code{cov.unscaled}}{covariance of the lc50 model coefficients.}
-##' \item{\code{loglc50}}{a named vector of log lc50s for the treatment groups.}
-##' \item{\code{loglc50.cov}}{covariance of the lc50s for the treatment groups.}
+##' \item{\code{coefficients}}{a named vector of lcx model coefficients.}
+##' \item{\code{cov.unscaled}}{covariance of the lcx model coefficients.}
+##' \item{\code{loglcx}}{a named vector of log lcxs for the treatment groups.}
+##' \item{\code{loglcx.cov}}{covariance of the lcxs for the treatment groups.}
 ##' \item{\code{concentration}}{a vector of taxin concentrations.}
 ##' \item{\code{group}}{a factor distinguishing treatment groups.}
-##' \item{\code{x}}{a design matrix relating log lc50 to factors describing the additional stressors.}
+##' \item{\code{x}}{a design matrix relating log lcx to factors describing the additional stressors.}
 ##' \item{\code{y}}{a two column matrix of responses, giving the survivals and mortalities.}
 ##' \item{\code{fitted.values}}{the fitted probability of survival.}
 ##' \item{\code{residuals}}{the deviance residuals for the fit.}
@@ -110,22 +111,27 @@ NULL
 ##' \item{\code{null.deviance}}{the deviance of the null model, which fits a single mortality rate to all data.}
 ##' \item{\code{df.null}}{the degrees of freedom for the null model.}
 ##' \item{\code{optim}}{the result of the call to \code{optim}.}
+##' \item{\code{link}}{the link function.}
+##' \item{\code{lethal}}{the modelled level of lethality.}
+##' \item{\code{quasi}}{is the dispersion estimated.}
+##' \item{\code{common.background}}{is background mortality common.}
+##' \item{\code{rate.shrink}}{the shrinkage penalty.}
 ##' \item{\code{xlevels}}{a record of the levels of the factors used in fitting.}
 ##' \item{\code{contrasts}}{the contrasts used.}
 ##' \item{\code{call}}{the matched call.}
-##' \item{\code{link}}{the link function.}
-##' \item{\code{quasi}}{is the dispersion estimated.}
 ##' \item{\code{terms}}{the terms object used.}
 ##' \item{\code{model}}{the model frame.}
 ##'
 ##' @export
-lc50 <- function(formula,concentration,group,data,start=NULL,
-                 link=c("probit","logit"),quasi=FALSE,common.background=FALSE,
-                 rate.shrink=0,optim.control=list()) {
+lcx <- function(formula,concentration,group,data,start=NULL,
+                link=c("probit","logit"),lethal=50,
+                quasi=FALSE,common.background=FALSE,
+                rate.shrink=0,optim.control=list()) {
 
   ## Record call and link function
   cl <- match.call()
   link <- match.arg(link)
+  if(!(lethal %in% c(10,50))) warning("Lethality should be 10 or 50")
 
   ## Create the model frame and terms
   mf <- match.call(expand.dots = FALSE)
@@ -147,31 +153,29 @@ lc50 <- function(formula,concentration,group,data,start=NULL,
   group <- as.factor(mf[,"(group)"])
 
   ## Fit separate models to each group to generate initial parameter estimates
-  if(is.null(start)) start <- lc50.initialize(Y,conc,group)
+  if(is.null(start)) start <- lcx.initialize(Y,conc,group,link,lethal)
   alpha <- start$alpha
   gamma <- if(common.background) mean(start$gamma) else start$gamma
-  beta <- qr.solve(X,start$loglc50[group])
-  r <- lc50.fit(X,Y,conc,group,alpha,beta,gamma,link,quasi,common.background,rate.shrink,optim.control)
+  beta <- qr.solve(X,start$loglcx[group])
+  r <- lcx.fit(X,Y,conc,group,alpha,beta,gamma,link,lethal,quasi,common.background,rate.shrink,optim.control)
   r <- c(r,
          list(
            xlevels=.getXlevels(mt, mf),
            contrasts=attr(X,"contrasts"),
            call=cl,
-           link=link,
-           quasi=quasi,
-           common.background=common.background,
-           rate.shrink=rate.shrink,
            terms=mt,
            model=mf))
-  class(r) <- "lc50"
+  class(r) <- "lcx"
   r
 }
 
 
-##' @rdname lc50
+##' @rdname lcx
 ##' @importFrom MASS ginv
-lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,
+lcx.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,lethal,
                      quasi=FALSE,common.background=FALSE,rate.shrink=0,optim.control=list()) {
+
+## DO SOMETHING
 
   ## Decompose response
   y <- Y[,1]
@@ -189,8 +193,13 @@ lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,
   ## Select inverse link function
   ilink <- switch(link,probit=pnorm,logit=plogis)
 
+  ## Select the lethality offset
+  offset <- switch(link,
+                   probit=qnorm(1-lethal/100),
+                   logit=qlogis(1-lethal/100))
+
   fitted.pq <- function(alpha,beta,gamma) {
-    p <- ilink(alpha[group]*(log(conc)-X%*%beta))
+    p <- ilink(alpha[group]*(log(conc)-X%*%beta)+offset)
     q <- ilink(if(!common.background) gamma[group] else gamma)
     ifelse(conc>0,p*q,q)
   }
@@ -225,11 +234,11 @@ lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,
   gamma.cov <- V[gamma.k,gamma.k,drop=FALSE]
   colnames(gamma.cov) <- rownames(gamma.cov) <- if(!common.background) levels(group) else "Common"
 
-  ## Compute lc50 and covariance by group
-  loglc50 <- as.numeric(Xg%*%beta)
-  names(loglc50) <- levels(group)
-  loglc50.cov <- Xg%*%beta.cov%*%t(Xg)
-  colnames(loglc50.cov) <- rownames(loglc50.cov) <- levels(group)
+  ## Compute lcx and covariance by group
+  loglcx <- as.numeric(Xg%*%beta)
+  names(loglcx) <- levels(group)
+  loglcx.cov <- Xg%*%beta.cov%*%t(Xg)
+  colnames(loglcx.cov) <- rownames(loglcx.cov) <- levels(group)
 
   ## Compute the deviance
   fitted <- fitted.pq(alpha,beta,gamma)
@@ -251,8 +260,8 @@ lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,
             gamma.cov=gamma.cov,
             coefficients=beta,
             cov.unscaled=beta.cov,
-            loglc50=loglc50,
-            loglc50.cov=loglc50.cov,
+            loglcx=loglcx,
+            loglcx.cov=loglcx.cov,
             concentration=conc,
             group=group,
             x=X,
@@ -264,30 +273,41 @@ lc50.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,
             df.residual=df.residual,
             null.deviance=null.deviance,
             df.null=df.null,
-            optim=mn)
-  class(r) <- "lc50"
+            optim=mn,
+            link=link,
+            lethal=lethal,
+            quasi=quasi,
+            common.background=common.background,
+            rate.shrink=rate.shrink)
+  class(r) <- "lcx"
   r
 }
 
 
-##' Estimate starting parameters for and LC50 model fit
+##' Estimate starting parameters for and LCx model fit
 ##'
 ##' This is the default method for computing the starting values used
-##' to initialize an \code{\link{lc50}} model.
+##' to initialize an \code{\link{lcx}} model.
 ##'
-##' @title Starting parameters for an LC50 model fit
+##' @title Starting parameters for an LCx model fit
 ##' @param Y a two column matrix of the number of survivals and mortalities in each sample.
 ##' @param conc a vector of tixin concentrations
 ##' @param group a factor delineating treatment groups
 ##' @param link  the link function for survival fractions
+##' @param lethal the modelled level of lethality
 ##' @return Return a list of with components
 ##' \item{\code{alpha}}{the rate parameter for each treatment group}
 ##' \item{\code{gamma}}{the probit of the control surival for each treatment group}
-##' \item{\code{loglc50}}{the log lc50 for each treatment group}
+##' \item{\code{loglcx}}{the log lcx for each treatment group}
 ##' @export
-lc50.initialize <- function(Y,conc,group,link=c("probit","logit")) {
+lcx.initialize <- function(Y,conc,group,link=c("probit","logit"),lethal) {
   link <- match.arg(link)
 
+  offset <- switch(link,
+                   probit=qnorm(1-lethal/100),
+                   logit=qlogis(1-lethal/100))
+
+  ## DO SOMETHING
   init <- function(Y,conc) {
     X <- cbind(1,ifelse(conc>0,1,0),ifelse(conc>0,log(conc),0))
     glm.fit(X,Y,family=binomial(link=link))$coefficient
@@ -296,17 +316,17 @@ lc50.initialize <- function(Y,conc,group,link=c("probit","logit")) {
   cfs <- lapply(levels(group),function(g) init(Y[group==g,],conc[group==g]))
   list(alpha=sapply(cfs,function(cs) cs[3]),
        gamma=sapply(cfs,function(cs) cs[1]),
-       loglc50=sapply(cfs,function(cs) -sum(cs[1:2])/cs[3]))
+       loglcx=sapply(cfs,function(cs) offset-sum(cs[1:2])/cs[3]))
 }
 
 
 ##' @export
-print.lc50 <- function(x,digits = max(3L, getOption("digits") - 3L),...) {
+print.lcx <- function(x,digits = max(3L, getOption("digits") - 3L),...) {
   cat("\nCall:\n", paste(deparse(x$call), sep = "\n", collapse = "\n"), "\n\n", sep = "")
   cat("Coefficients:\n")
   print.default(format(x$coefficients, digits=digits),print.gap=2L,quote=FALSE)
-  cat("log LC50:\n")
-  print.default(format(x$loglc50, digits=digits),print.gap=2L,quote=FALSE)
+  cat("log LC",x$lethal,":\n")
+  print.default(format(x$loglcx, digits=digits),print.gap=2L,quote=FALSE)
   cat("Baseline Survival:\n")
   print.default(format(x$gamma, digits=digits),print.gap=2L,quote=FALSE)
   cat("Rate:\n")
@@ -315,27 +335,27 @@ print.lc50 <- function(x,digits = max(3L, getOption("digits") - 3L),...) {
 }
 
 
-##' Summary method for class "\code{lc50}".
+##' Summary method for class "\code{lcx}".
 ##'
 ##'
-##' @title Summmarizing LC50 model fits
-##' @param object an object of class \code{lc50}, obtained as the
-##' result of a call to \code{\link{lc50}}
+##' @title Summmarizing LCx model fits
+##' @param object an object of class \code{lcx}, obtained as the
+##' result of a call to \code{\link{lcx}}
 ##' @param background if \code{TRUE} a summary table for the background survival is calculated
 ##' @param rate if \code{TRUE} a summary table for the rate parameters is calculated
 ##' @param ... additional parameters are ignored.
-##' @param x an object of class \code{summary.lc50}, usually, a result
-##' of a call to \code{summary.lc50}.
+##' @param x an object of class \code{summary.lcx}, usually, a result
+##' of a call to \code{summary.lcx}.
 ##' @param digits the number of significant digits to use when printing.
 ##' @param signif.stars logical. If \code{TRUE}, 'significance stars'
 ##' are printed for each coefficient.
-##' @return Returns an object of class \code{summary.lc50}, with components
+##' @return Returns an object of class \code{summary.lcx}, with components
 ##' \item{\code{coefficients}}{a table of coefficients.}
-##' \item{\code{lc50}}{a table of LC50 for each treatment group.}
+##' \item{\code{lcx}}{a table of LCx for each treatment group.}
 ##' \item{\code{bsurv}}{optionally, a table of background survival for each treatment group.}
 ##' \item{\code{rate}}{optionally, a table of rates for each treatment group.}
 ##' @export
-summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
+summary.lcx <- function(object,background=TRUE,rate=FALSE,...) {
 
   keep <- match(c("call","deviance","aic","dispersion","contrasts",
                   "df.residual","null.deviance","df.null"),names(object),0L)
@@ -346,13 +366,13 @@ summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
   coef.table <- cbind(cf, cf.se, zvalue, pvalue)
   dimnames(coef.table) <- list(names(cf), c("Estimate","Std. Error","z value","Pr(>|z|)"))
 
-  loglc50 <- object$loglc50
-  loglc50.se <- sqrt(diag(object$dispersion*object$loglc50.cov))
-  lc50.table <- cbind(loglc50, loglc50.se, exp(loglc50), exp(loglc50-1.96*loglc50.se), exp(loglc50+1.96*loglc50.se))
-  dimnames(lc50.table) <- list(names(loglc50), c("Estimate","Std. Error", "LC50", "Lwr 95%", "Upr 95%"))
+  loglcx <- object$loglcx
+  loglcx.se <- sqrt(diag(object$dispersion*object$loglcx.cov))
+  lcx.table <- cbind(loglcx, loglcx.se, exp(loglcx), exp(loglcx-1.96*loglcx.se), exp(loglcx+1.96*loglcx.se))
+  dimnames(lcx.table) <- list(names(loglcx), c("Estimate","Std. Error", paste0("LC",object$lethal), "Lwr 95%", "Upr 95%"))
 
   r <- c(list(coefficients=coef.table,
-              lc50=lc50.table),
+              lcx=lcx.table),
          object[keep])
 
   if(background) {
@@ -372,14 +392,14 @@ summary.lc50 <- function(object,background=TRUE,rate=FALSE,...) {
     r$rate <- rate.table
   }
 
-  class(r) <- c("summary.lc50")
+  class(r) <- c("summary.lcx")
   r
 }
 
 
-##' @rdname summary.lc50
+##' @rdname summary.lcx
 ##' @export
-print.summary.lc50 <- function(x,digits=max(3L,getOption("digits")-3L),
+print.summary.lcx <- function(x,digits=max(3L,getOption("digits")-3L),
                                signif.stars=getOption("show.signif.stars"),...) {
 
   cat("\nCall:\n",paste(deparse(x$call),sep="\n",collapse="\n"),"\n\n",sep="")
@@ -392,8 +412,8 @@ print.summary.lc50 <- function(x,digits=max(3L,getOption("digits")-3L),
                   format(unlist(x[c("df.null", "df.residual")])), " degrees of freedom\n"),
             1L, paste, collapse = " "), sep = "")
   cat("AIC: ", format(x$aic, digits = max(4L, digits + 1L)),"\n")
-  cat("\nLC50:\n")
-  printCoefmat(x$lc50,digits=digits,cs.ind=1:2,tst.ind=NULL,has.Pvalue=FALSE,na.print="NA",...)
+  cat("\nLC",x$lethal,":\n")
+  printCoefmat(x$lcx,digits=digits,cs.ind=1:2,tst.ind=NULL,has.Pvalue=FALSE,na.print="NA",...)
   if(!is.null(x$bsurv)) {
     cat("\nBackground Survival:\n")
     printCoefmat(x$bsurv,digits=digits,cs.ind=1:2,tst.ind=NULL,has.Pvalue=FALSE,na.print="NA",...)
@@ -412,7 +432,7 @@ print.summary.lc50 <- function(x,digits=max(3L,getOption("digits")-3L),
 
 
 
-##' Compute an analysis of deviance table for an LC50 model fit.
+##' Compute an analysis of deviance table for an LCx model fit.
 ##'
 ##' Specifying a single object gives a sequential analysis of deviance
 ##' table for that fit. That is, the reductions in the residual
@@ -430,28 +450,28 @@ print.summary.lc50 <- function(x,digits=max(3L,getOption("digits")-3L),
 ##' statistics (and P values) comparing the reduction in deviance for
 ##' the row to the residuals.
 ##'
-##' @title Analysis of Deviance for lc50 model fits
-##' @param object an object of class \code{lc50}, usually obtained as the
-##' results from a call to \code{\link{lc50}}
-##' @param ... additional objects of class \code{lc50}.
+##' @title Analysis of Deviance for lcx model fits
+##' @param object an object of class \code{lcx}, usually obtained as the
+##' results from a call to \code{\link{lcx}}
+##' @param ... additional objects of class \code{lcx}.
 ##' @param test a character string, partially matching one of
 ##' "\code{LRT}", "\code{Chisq}", or "\code{Cp}". See
 ##' \code{link{stat.anova}}.
 ##' @return An object of class \code{anova} inheriting from class
 ##' \code{data.frame}.
 ##' @export
-anova.lc50 <- function(object,...,test = NULL)  {
+anova.lcx <- function(object,...,test = NULL)  {
   ## Handle multiple fits
   dotargs <- list(...)
   named <- if (is.null(names(dotargs))) rep_len(FALSE, length(dotargs)) else (names(dotargs) != "")
   if (any(named))
-    warning("the following arguments to 'anova.lc50' are invalid and dropped: ",
+    warning("the following arguments to 'anova.lcx' are invalid and dropped: ",
             paste(deparse(dotargs[named]), collapse = ", "))
   dotargs <- dotargs[!named]
-  is.lc50 <- vapply(dotargs, function(x) inherits(x, "lc50"), NA)
-  dotargs <- dotargs[is.lc50]
+  is.lcx <- vapply(dotargs, function(x) inherits(x, "lcx"), NA)
+  dotargs <- dotargs[is.lcx]
   if (length(dotargs))
-    return(anova.lc50list(c(list(object),dotargs),test = test))
+    return(anova.lcxlist(c(list(object),dotargs),test = test))
 
   ## Passed single fit object
   varlist <- attr(object$terms, "variables")
@@ -461,10 +481,11 @@ anova.lc50 <- function(object,...,test = NULL)  {
   resdev <- resdf <- NULL
   if(nvars > 0) {
     for (i in seq_len(nvars)) {
-      fit <- eval(call("lc50.fit",X=x[,varseq<i,drop=FALSE],
+      fit <- eval(call("lcx.fit",X=x[,varseq<i,drop=FALSE],
                        Y=object$y,conc=object$concentration,group=object$group,
                        alpha=object$alpha,beta=object$beta[varseq<i],gamma=object$gamma,
-                       link=object$link,common.background=object$common.background,
+                       link=object$link,lethal=object$lethal,
+                       common.background=object$common.background,
                        rate.shrink=object$rate.shrink))
       resdev <- c(resdev, fit$deviance)
       resdf <- c(resdf, fit$df.residual)
@@ -485,9 +506,9 @@ anova.lc50 <- function(object,...,test = NULL)  {
   structure(table, heading = title, class = c("anova", "data.frame"))
 }
 
-##' @rdname anova.lc50
+##' @rdname anova.lcx
 ##' @export
-anova.lc50list <- function (object, ..., test = NULL) {
+anova.lcxlist <- function (object, ..., test = NULL) {
   responses <- as.character(lapply(object, function(x) deparse(formula(x)[[2L]])))
   sameresp <- responses == responses[1L]
   if (!all(sameresp)) {
@@ -500,7 +521,7 @@ anova.lc50list <- function (object, ..., test = NULL) {
     stop("models were not all fitted to the same size of dataset")
   nmodels <- length(object)
   if (nmodels == 1)
-    return(anova.lc50(object[[1L]], test = test))
+    return(anova.lcx(object[[1L]], test = test))
   resdf <- as.numeric(lapply(object, function(x) x$df.residual))
   resdev <- as.numeric(lapply(object, function(x) x$deviance))
   table <- data.frame(resdf, resdev, c(NA, -diff(resdf)), c(NA, -diff(resdev)))
@@ -522,26 +543,26 @@ anova.lc50list <- function (object, ..., test = NULL) {
 
 ## This is ripped off coef.glm
 ##' @export
-coef.lc50 <- function(object,...) {
+coef.lcx <- function(object,...) {
   object$coefficients
 }
 
 ## This is ripped off from vcov.glm
 ##' @export
-vcov.lc50 <- function(object,...) {
+vcov.lcx <- function(object,...) {
   object$dispersion*object$cov.unscaled
 }
 
 ## This is ripped off from model.matrix.lm
 ##' @export
-model.matrix.lc50 <- function(object,...) {
+model.matrix.lcx <- function(object,...) {
   object$x
 }
 
 
 ## This is ripped off from model.frame.lm
 ##' @export
-model.frame.lc50 <- function(formula, ...)  {
+model.frame.lcx <- function(formula, ...)  {
   dots <- list(...)
   nargs <- dots[match(c("data","concentration","group"),names(dots),0)]
   if (length(nargs) || is.null(formula$model)) {
@@ -566,7 +587,7 @@ model.frame.lc50 <- function(formula, ...)  {
 ## This is ripped off from simulate.lm
 ##' @importFrom stats simulate
 ##' @export
-simulate.lc50 <- function(object, nsim=1, seed=NULL, ...) {
+simulate.lcx <- function(object, nsim=1, seed=NULL, ...) {
   if(object$quasi) stop("Cannot simulate from a quasi model")
   if (!exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
     runif(1)
@@ -602,16 +623,16 @@ simulate.lc50 <- function(object, nsim=1, seed=NULL, ...) {
 }
 
 
-##' Predicted survival from a fitted LC50 object
+##' Predicted survival from a fitted LCx object
 ##'
 ##' If \code{newdata} is omitted the predictions are based on the data
 ##' used for the fit.  For \code{type="adjusted"}, it is assumed there
 ##' is no background mortality and predictions are made based purely
 ##' on the mortality due to the toxin.
 ##'
-##' @title Predict method for LC50 fits
-##' @param object object an object of class \code{lc50}, obtained as the
-##' result of a call to \code{\link{lc50}}
+##' @title Predict method for LCx fits
+##' @param object object an object of class \code{lcx}, obtained as the
+##' result of a call to \code{\link{lcx}}
 ##' @param newdata optionally, a data frame in which to look for
 ##' variables with which to predict. If omitted, the fitted linear
 ##' predictors are used.
@@ -623,7 +644,7 @@ simulate.lc50 <- function(object, nsim=1, seed=NULL, ...) {
 ##' @param ... further arguments passed to or from other methods.
 ##' @return a vector of predicted survival fractions.
 ##' @export
-predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...) {
+predict.lcx <- function (object, newdata, type = c("response", "adjusted"),...) {
 
   type <- match.arg(type)
 
@@ -653,18 +674,23 @@ predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...)
   ## Select inverse link function
   ilink <- switch(object$link,probit=pnorm,logit=plogis)
 
+  ## Select the lethality offset
+  offset <- switch(object$link,
+                   probit=qnorm(1-object$lethal/100),
+                   logit=qlogis(1-object$lethal/100))
+
   ## Predict survival fraction
-  p <- ilink(alpha[group]*(log(conc)-X%*%beta))
+  p <- ilink(alpha[group]*(log(conc)-X%*%beta)+offset)
   q <- if(type=="adjusted") 1 else ilink(if(!object$common.background) gamma[group] else gamma)
   ifelse(conc>0,p*q,q)
 }
 
 
 
-##' Bayesian estimates of LC50 from survival data in the presence of additional
+##' Bayesian estimates of LCx from survival data in the presence of additional
 ##' stressors and non-ignorable control mortality
 ##'
-##' This function is an analog of \code{\link{lc50}} that produces an
+##' This function is an analog of \code{\link{lcx}} that produces an
 ##' object of class \code{jags} which can be used to draw samples from
 ##' the posterior using \code{update} and \code{coda.samples} from
 ##' \pkg{rjags}.
@@ -674,8 +700,8 @@ predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...)
 ##' \code{gamma}, a single prior mean and precision is assumed for all
 ##' groups, for \code{beta} individual prior means and precisions can be specified
 ##'
-##' @title Estimate LC50 for a toxin
-##' @param formula a formula relating log LC50 to covariates
+##' @title Estimate LCx for a toxin
+##' @param formula a formula relating log LCx to covariates
 ##' describing the aditional stressors.
 ##' @param concentration the name of variable that is the
 ##' concentration of the toxin.
@@ -683,7 +709,7 @@ predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...)
 ##' @param data data frame containing variables in the model.
 ##' @param start Starting values used to initialize the model.  If
 ##' \code{start=NULL} these parameters are determined by
-##' \code{\link{lc50.initialize}}.
+##' \code{\link{lcx.initialize}}.
 ##' @param link the link function for survival fractions
 ##' @param common.background should a common background survival be
 ##' estimated for each treatment group.
@@ -702,19 +728,25 @@ predict.lc50 <- function (object, newdata, type = c("response", "adjusted"),...)
 ##' can be used to generate dependent samples from the posterior
 ##' distribution of the parameters
 ##' @export
-lc50JAGS <- function(formula,concentration,group,data,start=NULL,link=c("probit","logit"),
-                     common.background=FALSE,n.adapt=500,n.chains=4,
-                     alpha.mu=0,alpha.tau=0.0001,
-                     beta.mu=0,beta.tau=0.0001,
-                     gamma.mu=0,gamma.tau=0.0001) {
+lcxJAGS <- function(formula,concentration,group,data,start=NULL,
+                    link=c("probit","logit"),lethal=50,
+                    common.background=FALSE,n.adapt=500,n.chains=4,
+                    alpha.mu=0,alpha.tau=0.0001,
+                    beta.mu=0,beta.tau=0.0001,
+                    gamma.mu=0,gamma.tau=0.0001) {
 
   if(!requireNamespace("rjags",quietly=TRUE)) {
-    stop("lc50Jags requires the rjags package to be installed", call. = FALSE)
+    stop("lcxJags requires the rjags package to be installed", call. = FALSE)
   }
 
   ## Record call and link function
   cl <- match.call()
   link <- match.arg(link)
+
+  ## Select the lethality offset
+  offset <- switch(link,
+                   probit=qnorm(1-lethal/100),
+                   logit=qlogis(1-lethal/100))
 
   ## Create the model frame and terms
   mf <- match.call(expand.dots = FALSE)
@@ -745,8 +777,8 @@ lc50JAGS <- function(formula,concentration,group,data,start=NULL,link=c("probit"
   beta.tau <- rep(beta.tau,length.out=ncol(X))
 
   ## Fit separate models to each group to generate initial parameter estimates
-  if(is.null(start)) start <- lc50.initialize(Y,conc,group)
-  start$beta <- qr.solve(X,start$loglc50[group])
+  if(is.null(start)) start <- lcx.initialize(Y,conc,group,link,lethal)
+  start$beta <- qr.solve(X,start$loglcx[group])
   if(common.background) start$gamma <- mean(start$gamma)
 
   ## Index of first row of X for each group
@@ -763,12 +795,12 @@ model {
   for(i in 1:N) {
     alive[i] ~ dbin(pi[i],total[i])
     pi[i] <- q[group[i]]*ifelse(zero[i]>0,1,p[i])
-    ",link,"(p[i]) <- alpha[group[i]]*(log(conc[i]+zero[i]) - loglc50[group[i]])
+    ",link,"(p[i]) <- alpha[group[i]]*(log(conc[i]+zero[i]) - loglcx[group[i]])+offset
   }
 
-  loglc50 <- X %*% beta
+  loglcx <- X %*% beta
   for(i in 1:Ngroup) {
-    log(lc50[i]) <- loglc50[i]
+    log(lcx[i]) <- loglcx[i]
     ",link,"(q[i]) <- gamma[i]
   }
 
@@ -793,12 +825,12 @@ model {
   for(i in 1:N) {
     alive[i] ~ dbin(pi[i],total[i])
     pi[i] <- q*ifelse(zero[i]>0,1,p[i])
-    ",link,"(p[i]) <- alpha[group[i]]*(log(conc[i]+zero[i]) - loglc50[group[i]])
+    ",link,"(p[i]) <- alpha[group[i]]*(log(conc[i]+zero[i]) - loglcx[group[i]])
   }
 
-  loglc50 <- X %*% beta
+  loglcx <- X %*% beta
   for(i in 1:Ngroup) {
-    log(lc50[i]) <- loglc50[i]
+    log(lcx[i]) <- loglcx[i]
   }
   ",link,"(q) <- gamma
 
@@ -822,6 +854,7 @@ model {
                         "conc" = conc,
                         "group" = group,
                         "zero" = as.numeric(conc==0),
+                        "offset" = offset,
                         "X" = Xg,
                         "N" = nrow(Y),
                         "Ncoef" = ncol(X),

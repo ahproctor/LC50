@@ -4,7 +4,7 @@ author: "A. Proctor and S Wotherspoon"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{LC50}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -96,7 +96,7 @@ ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
 ### Model fitting
 
 The LC50 lethal concentrations for each temperature and salinity
-combination can be estimated with `lc50`.  This function fits the
+combination can be estimated with `lcx`.  This function fits the
 Binomial model described in the previous section by maximum
 likelihood.  The details of the model are specified by three
 arguments:
@@ -111,11 +111,11 @@ arguments:
 
 * the `group` argument names a factor in the dataframe that
   disinguishes the combinations of additional stressors.  The model
-  requires that the terms of linear predictor for log LC50 are
+  requires that the terms of linear predictor for log LCX are
   constant within levels of this factor.
 
 ```{r}
-fit <- lc50(cbind(alive,dead)~salinity*temperature,concentration=conc,group=group,data=toxicity)
+fit <- lcx(cbind(alive,dead)~salinity*temperature,concentration=conc,group=group,data=toxicity)
 summary(fit)
 ```
 By default, a probit link is used and separate background survival
@@ -132,15 +132,15 @@ LC50.  Although this fits a restricted model for log LC50, it still
 fits a separate control parameter $\gamma_{i}$ and rate parameter
 $\alpha_{i}$ for each group.
 ```{r}
-fit <- lc50(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity)
+fit <- lcx(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity)
 summary(fit)
 ```
 
 The table of lethal concentrations can be extracted from the summary and displayed graphically
 ```{r,fig.width=7,fig.height=6}
 d.lc50 <- with(summary(fit),
-               cbind(lc50,
-                     toxicity[match(rownames(lc50),toxicity$group),
+               cbind(lcx,
+                     toxicity[match(rownames(lcx),toxicity$group),
                               c("group","salinity","temperature")]))
 ggplot(d.lc50,aes(x=group,y=LC50))+
   geom_linerange(mapping=aes(x=group,ymin=`Lwr 95%`,ymax=`Upr 95%`),col="dodgerblue1",lwd=3)+
@@ -178,7 +178,7 @@ boot <- lapply(simulate(fit,100),function(s) {
   ## Refit model and extract lc50s
   update(fit,data=d.boot,start=fit)})
 ## Summaries of bootstrap estimates
-lc50 <- sapply(boot,function(fit) exp(fit$loglc50))
+lc50 <- sapply(boot,function(fit) exp(fit$loglcx))
 t(apply(lc50,1,function(lc50) c(LC50=mean(lc50),quantile(lc50,c(0.025,0.975)))))
 ```
 
@@ -219,26 +219,26 @@ exp(confint(mc)$confint)
 ### Bayesian Estimates
 
 If **JAGS** and the **rjags** package are installed, Bayesian
-estimates of LC50 can be obtained with `lc50JAGS`.  This function is
-an analog of `lc50` that constructs an object of class `jags` that can
+estimates of LC50 can be obtained with `lcxJAGS`.  This function is
+an analog of `lcx` that constructs an object of class `jags` that can
 be used to sample from the posterior for the model using the
 facilities of the **rjags** package.
 
-To generate Bayesian estimates for the reduced model, `lc50JAGS` is
+To generate Bayesian estimates for the reduced model, `lcxJAGS` is
 used to generate a model object
 ```{r}
 library(rjags)
-model <- lc50JAGS(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity)
+model <- lcxJAGS(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity)
 ```
 and an initial burn-in sample is drawn
 ```{r}
 update(model,1000)
 ```
 A final sample is then drawn and stored.  It is possible to sample for
-any of the model variables "alpha", "beta", "gamma", "lc50",
-"loglc50", "p" or "q" as required.
+any of the model variables "alpha", "beta", "gamma", "lcx",
+"loglcx", "p" or "q" as required.
 ```{r}
-s <- coda.samples(model,c("beta","q","lc50"),n.iter=10000,n.thin=10)
+s <- coda.samples(model,c("beta","q","lcx"),n.iter=10000,n.thin=10)
 summary(s)
 ```
 
@@ -254,7 +254,7 @@ Without shrinkage, the estimates of some of the rate parameters for
 the toxicity data are particularly high, and the confidence intervals
 for the corresponding LC50s are not very wide.
 ```{r}
-fit <- lc50(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity)
+fit <- lcx(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity)
 summary(fit,rate=TRUE)
 ```
 
@@ -274,7 +274,7 @@ ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
 
 With shrinkage,
 ```{r}
-fit <- lc50(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity,rate.shrink=0.001)
+fit <- lcx(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity,rate.shrink=0.001)
 summary(fit,rate=TRUE)
 ```
 
