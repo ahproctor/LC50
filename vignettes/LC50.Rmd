@@ -15,51 +15,52 @@ vignette: >
 
 ## Model
 
-LC50 lethal concentrations for each combination of additional
+Lethal concentrations LCx for each combination of additional
 stressors are estimated by fitting a Binomial regression model that
 relates survival to log toxin concentration, adjusting for background
-mortality and assuming a linear relation between log LC50 and
+mortality and assuming a linear relation between log LCx and
 descriptors of the additional stressors.
 
 More precisely, the a Binomial regression model parametrized in terms
-of log LC50 is used to relate survival to log toxin concentration
-$$
+of log LCx is used to relate survival to log toxin concentration
+\[
 \begin{align}
-	y_{ijk} &\sim \operatorname{Bin}(n_{ijk},\pi_{ij})\\
-	\pi_{ij} &=
+	y_{ijk} &\sim \operatorname{Bin}(N_{ijk},\pi_{ijk})\\
+	\pi_{ijk} &=
 		\begin{cases}
-			p_{ij}q_{i} & C_{i} > 0\\
-			q_{i} & C_{i}= 0
+			p_{ijk}q_{k} & C_{ijk} > 0\\
+			q_{k} & C_{ijk}= 0
 		\end{cases}\\
-	\ell_{1}(p_{ij}) &= \alpha_{i} (\log C_{ij} - \log\mathrm{LC50}_{i})\\
-	\log \mathrm{LC50}_{i} &= \beta_{0} + \beta_{1} x_{1i} + \dots + \beta_{m}x_{mi}\\
-	\ell_{2}(q_{i}) &= \gamma_{i}
+	\ell_{1}(p_{ijk})&= \alpha_{k} (\log C_{ijk} - \log\mathrm{LCx}_{k}) + z\\
+	\log \mathrm{LCx}_{k} &= \beta_{0} + \beta_{1} x_{1k} + \dots + \beta_{m}x_{mk}\\
+	\ell_{2}(q_{k}) &= \gamma_{k}
 \end{align}
-$$
-Here $y_{ijk}$ is the number of survivors, $n_{ijk}$ is the total
-number of individuals and $\pi_{ij}$ is the fraction of individuals
-expected to survive in replicate $k$ receiving toxin concentration
-$C_{ij}$ and the $i^{\mathrm{th}}$ combination of additional
-stressors. The total survival fraction $\pi_{ij}$ is decomposed into a
-fraction $q_{i}$ of individuals expected to survive in the absence of
-the toxin, and a fraction $p_{ij}$ expected to survive the additional
-mortality induced by the toxin.  The fraction $p_{ij}$ is related to
-the log toxin concentration $\log C_{ij}$, the log lethal
-concentration $\log \mathrm{LC50}_{i}$ and a rate parameter
-$\alpha_{i}$ specific to the combination of stressors through a
-monotonic link function $\ell_{1}$ with the property that
-$\ell_{2}(1/2) = 0$, so that $p_{ij}=1/2$ when $C_{ij} =
-\mathrm{LC50}_{i}$.  Similarly, the baseline survival fraction $q_{i}$
-is related to a survival parameter $\gamma_{i}$ specific to the
-combination of stressors through a monotonic link function $\ell_{2}$.
-The lethal concentration $\mathrm{LC50}_{i}$ specific to a stressor
-combination is related through a log link to a linear predictor
-constructed from covariates $x_{1},x_{2},\ldots,x_{m}$ describing the
-combination of additional stressors.
+\]
 
-The baseline survival parameters $\gamma_{i}$ and rate parameters
-$\alpha_{i}$ are viewed as nuisance parameters, and inference focuses
-on the effects of the additional stressors and the LC50 lethal
+Here \(y_{ijk}\) is the number of survivors at the end of the trial
+from \(N_{ijk}\) individuals in replicate \(i\) recieving target toxin
+concentration \(j\) and combination \(k\) of additional stressors and
+actual measured concentration \(C_{ijk}\), \(\pi_{ijk}\) is the
+fraction of individuals expected to survive which is decomposed into a
+fraction \(q_{i}\) of individuals expected to survive in the absence
+of the toxin, and a fraction \(p_{ijl}\) expected to survive the
+additional mortality induced by the toxin.  The fraction \(p_{ij}\) is
+related through a monotonic link function \(\ell_{1}\) to the log
+measured toxin concentration \(\log C_{ijk}\), the log lethal
+concentration \(\log \mathrm{LCx}_{i}\) and a rate parameter
+\(\alpha_{i}\) specific to the combination of stressors. Similarly,
+the baseline survival fraction \(q_{i}\) is related to a survival
+parameter \(\gamma_{i}\) specific to the combination of stressors
+through a monotonic link function \(\ell_{2}\).  The lethal concentration
+\(\mathrm{LCx}_{i}\) specific to a stressor combination is related
+through a log link to a linear predictor constructed from covariates
+\(x_{1},x_{2},\ldots,x_{m}\) describing the combination of additional
+stressors.  The level of lethality is modelled is determined by the
+offset \(z = \ell_{1}(x/100)\), (that is x=50 if LCx=LC50).
+
+The baseline survival parameters \(\gamma_{i}\) and rate parameters
+\(\alpha_{i}\) are viewed as nuisance parameters, and inference focuses
+on the effects of the additional stressors and the LCx lethal
 concentrations.
 
 
@@ -95,7 +96,7 @@ ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
 
 ### Model fitting
 
-The LC50 lethal concentrations for each temperature and salinity
+The LCx lethal concentrations for each temperature and salinity
 combination can be estimated with `lcx`.  This function fits the
 Binomial model described in the previous section by maximum
 likelihood.  The details of the model are specified by three
@@ -104,23 +105,23 @@ arguments:
 * a formula, the left hand side of which is a two column matrix
   constructed from the number of survivors and mortalities in each
   sample, while the right hand side specifies the terms in the linear
-  predictor for log LC50
+  predictor for log LCx
 
 * the `concentration` argument names the variable in the dataframe
   recording the concentration of the toxin, and
 
 * the `group` argument names a factor in the dataframe that
   disinguishes the combinations of additional stressors.  The model
-  requires that the terms of linear predictor for log LCX are
+  requires that the terms of linear predictor for log LCx are
   constant within levels of this factor.
 
 ```{r}
 fit <- lcx(cbind(alive,dead)~salinity*temperature,concentration=conc,group=group,data=toxicity)
 summary(fit)
 ```
-By default, a probit link is used and separate background survival
-rates are estimated for each group.
-
+By default, separate background survival rates are estimated for each
+group, and the LC50 lethal concentration is modelled using a probit
+link.
 
 An analysis of deviance table for the fit is constructed with `anova`.
 ```{r}
@@ -129,8 +130,8 @@ anova(fit,test="Chisq")
 This table shows no evidence that log LC50 depends on the interaction,
 and the model can be simplified to a main effects only model for log
 LC50.  Although this fits a restricted model for log LC50, it still
-fits a separate control parameter $\gamma_{i}$ and rate parameter
-$\alpha_{i}$ for each group.
+fits a separate control parameter \(\gamma_{i}\) and rate parameter
+\(\alpha_{i}\) for each group.
 ```{r}
 fit <- lcx(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity)
 summary(fit)
@@ -147,6 +148,14 @@ ggplot(d.lc50,aes(x=group,y=LC50))+
   geom_point()
 ```
 
+Alternately the **effects** package can be used to construct a graphical summary of the relation between LC50 and the additional stressors.
+```{r,fig.width=7,fig.height=6}
+library(effects)
+plot(Effect(c("salinity","temperature"),fit,
+            transformation=list(link=log,inverse=exp)))
+```
+
+
 Predictions from the fitted model can be generated with `predict`.
 ```{r,fig.width=7,fig.height=6}
 d.pr <- expand.grid(temperature=factor(c(12,14,16)),
@@ -157,19 +166,24 @@ d.pr$survival <- predict(fit,d.pr)
 ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
   geom_point()+
   geom_line(aes(x=conc,y=survival,colour=group),data=d.pr)+
-  #geom_vline(aes(xintercept=LC50,colour=group),data=d.lc50)+
-  #geom_rect(aes(x=Estimate,y=0,xmin=`Lwr 95%`,xmax=`Upr 95%`,ymin=0,ymax=1,fill=group),data=d.lc50,alpha=0.2,color=NA)+
+  geom_vline(aes(xintercept=LC50,colour=group),data=d.lc50)+
+  geom_rect(aes(x=Estimate,y=0,xmin=`Lwr 95%`,xmax=`Upr 95%`,ymin=0,ymax=1,fill=group),data=d.lc50,alpha=0.2,color=NA)+
   facet_grid(temperature~salinity)
 ```
 
-The confidence intervals shown in the summary are based on an
-asymptotic approximation and can be unreliable in small samples.  As
-an alternative, confidence intervals for the lethal concentrations can
+
+By default the model is fit with a standard Binomial likelihood.  When there is evidence that the data are overdispersed, a quasi-Binomial model can be fitted by specifying `quasi=TRUE`
+```{r}
+fitq <- lcx(cbind(alive,dead)~salinity+temperature,concentration=conc,group=group,data=toxicity,quasi=TRUE)
+summary(fitq)
+```
+
+
+Alternately, confidence intervals for the lethal concentrations can
 be calculated by parametric bootstrap - new data sets are simulated
 from the fitted model and the model refitted to the simulated data,
 confidence intervals are then derived from the variability seen in the
 estimates from the simulated data.
-
 ```{r}
 d.boot <- toxicity
 boot <- lapply(simulate(fit,100),function(s) {
@@ -245,10 +259,10 @@ summary(s)
 ### Shrinkage
 
 In trials with few distinct concentrations, the rate parameters
-$\alpha_{i}$ can be poorly resolved.  When these rates are
+\(\alpha_{i}\) can be poorly resolved.  When these rates are
 overestimated the confidence intervals for the LC50 can be too
 short. The `rate.shrink` parameter adds a penalty to the likelhood to
-shrink the $\alpha_{i}$ back towards zero.
+shrink the \(\alpha_{i}\) back towards zero.
 
 Without shrinkage, the estimates of some of the rate parameters for
 the toxicity data are particularly high, and the confidence intervals
@@ -287,7 +301,7 @@ d.pr$survival <- predict(fit,d.pr)
 ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
   geom_point()+
   geom_line(aes(x=conc,y=survival,colour=group),data=d.pr)+
-  #geom_vline(aes(xintercept=LC50,colour=group),data=d.lc50)+
-  #geom_rect(aes(x=Estimate,y=0,xmin=`Lwr 95%`,xmax=`Upr 95%`,ymin=0,ymax=1,fill=group),data=d.lc50,alpha=0.2,color=NA)+
+  geom_vline(aes(xintercept=LC50,colour=group),data=d.lc50)+
+  geom_rect(aes(x=Estimate,y=0,xmin=`Lwr 95%`,xmax=`Upr 95%`,ymin=0,ymax=1,fill=group),data=d.lc50,alpha=0.2,color=NA)+
   facet_grid(temperature~salinity)
 ```
