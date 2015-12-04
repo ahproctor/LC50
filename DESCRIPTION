@@ -11,6 +11,7 @@ Depends:
 Suggests:
     effects,
     ggplot2,
+    gridExtra,
     knitr,
     multcomp,
     rjags
