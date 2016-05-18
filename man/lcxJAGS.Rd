@@ -26,6 +26,8 @@ concentration of the toxin.}
 
 \item{link}{the link function for survival fractions}
 
+\item{lethal}{the modelled level of lethality}
+
 \item{common.background}{should a common background survival be
 estimated for each treatment group.}
 

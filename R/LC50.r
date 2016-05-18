@@ -121,7 +121,7 @@ NULL
 ##' \item{\code{call}}{the matched call.}
 ##' \item{\code{terms}}{the terms object used.}
 ##' \item{\code{model}}{the model frame.}
-##'
+##' @importFrom stats model.matrix model.frame model.response .getXlevels
 ##' @export
 lcx <- function(formula,concentration,group,data,start=NULL,
                 link=c("probit","logit"),lethal=50,
@@ -138,7 +138,7 @@ lcx <- function(formula,concentration,group,data,start=NULL,
   m <- match(c("formula", "concentration", "group", "data"), names(mf), 0L)
   mf <- mf[c(1L, m)]
   mf$drop.unused.levels <- TRUE
-  mf[[1L]] <- quote(stats::model.frame)
+  mf[[1L]] <- quote(model.frame)
   mf <- eval(mf, parent.frame())
   mt <- attr(mf,"terms")
 
@@ -171,6 +171,7 @@ lcx <- function(formula,concentration,group,data,start=NULL,
 
 
 ##' @rdname lcx
+##' @importFrom stats pnorm plogis qnorm qlogis dbinom optim
 ##' @importFrom MASS ginv
 lcx.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,lethal,
                      quasi=FALSE,common.background=FALSE,rate.shrink=0,optim.control=list()) {
@@ -299,6 +300,7 @@ lcx.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,lethal,
 ##' \item{\code{alpha}}{the rate parameter for each treatment group}
 ##' \item{\code{gamma}}{the probit of the control surival for each treatment group}
 ##' \item{\code{loglcx}}{the log lcx for each treatment group}
+##' @importFrom stats qnorm qlogis binomial glm.fit
 ##' @export
 lcx.initialize <- function(Y,conc,group,link=c("probit","logit"),lethal) {
   link <- match.arg(link)
@@ -354,6 +356,7 @@ print.lcx <- function(x,digits = max(3L, getOption("digits") - 3L),...) {
 ##' \item{\code{lcx}}{a table of LCx for each treatment group.}
 ##' \item{\code{bsurv}}{optionally, a table of background survival for each treatment group.}
 ##' \item{\code{rate}}{optionally, a table of rates for each treatment group.}
+##' @importFrom stats pnorm plogis
 ##' @export
 summary.lcx <- function(object,background=TRUE,rate=FALSE,...) {
 
@@ -398,6 +401,7 @@ summary.lcx <- function(object,background=TRUE,rate=FALSE,...) {
 
 
 ##' @rdname summary.lcx
+##' @importFrom stats printCoefmat
 ##' @export
 print.summary.lcx <- function(x,digits=max(3L,getOption("digits")-3L),
                                signif.stars=getOption("show.signif.stars"),...) {
@@ -459,6 +463,7 @@ print.summary.lcx <- function(x,digits=max(3L,getOption("digits")-3L),
 ##' \code{link{stat.anova}}.
 ##' @return An object of class \code{anova} inheriting from class
 ##' \code{data.frame}.
+##' @importFrom stats anova model.matrix stat.anova
 ##' @export
 anova.lcx <- function(object,...,test = NULL)  {
   ## Handle multiple fits
@@ -507,6 +512,7 @@ anova.lcx <- function(object,...,test = NULL)  {
 }
 
 ##' @rdname anova.lcx
+##' @importFrom stats stat.anova formula
 ##' @export
 anova.lcxlist <- function (object, ..., test = NULL) {
   responses <- as.character(lapply(object, function(x) deparse(formula(x)[[2L]])))
@@ -542,18 +548,21 @@ anova.lcxlist <- function (object, ..., test = NULL) {
 
 
 ## This is ripped off coef.glm
+##' @importFrom stats coef
 ##' @export
 coef.lcx <- function(object,...) {
   object$coefficients
 }
 
 ## This is ripped off from vcov.glm
+##' @importFrom stats vcov
 ##' @export
 vcov.lcx <- function(object,...) {
   object$dispersion*object$cov.unscaled
 }
 
 ## This is ripped off from model.matrix.lm
+##' @importFrom stats model.matrix
 ##' @export
 model.matrix.lcx <- function(object,...) {
   object$x
@@ -561,6 +570,7 @@ model.matrix.lcx <- function(object,...) {
 
 
 ## This is ripped off from model.frame.lm
+##' @importFrom stats terms model.frame
 ##' @export
 model.frame.lcx <- function(formula, ...)  {
   dots <- list(...)
@@ -585,7 +595,7 @@ model.frame.lcx <- function(formula, ...)  {
 
 
 ## This is ripped off from simulate.lm
-##' @importFrom stats simulate
+##' @importFrom stats simulate runif rbinom
 ##' @export
 simulate.lcx <- function(object, nsim=1, seed=NULL, ...) {
   if(object$quasi) stop("Cannot simulate from a quasi model")
@@ -643,6 +653,7 @@ simulate.lcx <- function(object, nsim=1, seed=NULL, ...) {
 ##' the toxin.
 ##' @param ... further arguments passed to or from other methods.
 ##' @return a vector of predicted survival fractions.
+##' @importFrom stats predict model.matrix delete.response pnorm plogis qnorm qlogis
 ##' @export
 predict.lcx <- function (object, newdata, type = c("response", "adjusted"),...) {
 
@@ -711,6 +722,7 @@ predict.lcx <- function (object, newdata, type = c("response", "adjusted"),...) 
 ##' \code{start=NULL} these parameters are determined by
 ##' \code{\link{lcx.initialize}}.
 ##' @param link the link function for survival fractions
+##' @param lethal the modelled level of lethality
 ##' @param common.background should a common background survival be
 ##' estimated for each treatment group.
 ##' @param n.adapt parameter passed to \code{jags.model}
@@ -727,6 +739,7 @@ predict.lcx <- function (object, newdata, type = c("response", "adjusted"),...) 
 ##' @return Returns an object inheriting from class \code{jags} which
 ##' can be used to generate dependent samples from the posterior
 ##' distribution of the parameters
+##' @importFrom stats qnorm qlogis model.matrix model.frame model.response
 ##' @export
 lcxJAGS <- function(formula,concentration,group,data,start=NULL,
                     link=c("probit","logit"),lethal=50,
@@ -753,7 +766,7 @@ lcxJAGS <- function(formula,concentration,group,data,start=NULL,
   m <- match(c("formula", "concentration", "group", "data"), names(mf), 0L)
   mf <- mf[c(1L, m)]
   mf$drop.unused.levels <- TRUE
-  mf[[1L]] <- quote(stats::model.frame)
+  mf[[1L]] <- quote(model.frame)
   mf <- eval(mf, parent.frame())
   mt <- attr(mf,"terms")
 
