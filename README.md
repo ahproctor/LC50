@@ -10,7 +10,7 @@ additional stressors and non-ignorable control mortality.
 The package is easily installed from GitHub, using the devtools package.
 
 ```R
-devtools::install_github("Abilouhill/LC50")
+devtools::install_github("ahproctor/LC50")
 ```
 
 If you don't have `devtools` installed already, install it first.
