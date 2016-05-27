@@ -1,8 +1,18 @@
 #' LC50 lethal concentrations in the presence of additional stressors.
 #'
 #' Provides facilities for estimating lethal concentrations for a
-#' toxin from destructively sampled survival data in the presence of
+#' toxin from single time point survival data in the presence of
 #' additional stressors and non-ignorable control mortality.
+#'
+#' A common 'critical effect concentration' used in toxicology
+#' bioassays is the LCx, the contetration that is lethal to x% of the
+#' tested population.  This package provides the facilities for
+#' estimating the LCx for a toxicant from single time point survival
+#' data in the presence of additional stressors and non-ignorable
+#' control mortality.  It is assumed that the additional stressors are
+#' applied in a factorial design, and within each treatment
+#' combination, a standard bioassay is conducted to estimate the
+#' treatment specific LCx for the toxicant.
 #'
 #' @name LC50-package
 #' @docType package
@@ -12,8 +22,8 @@ NULL
 
 ##' Simulated toxicity data
 ##'
-##' A simulated dataset showing individual survival following exposure
-##' to a known toxin in the presence of the additional stressors
+##' A simulated dataset showing the individual survival within replicates, following exposure
+##' to a known toxin in the presence of the additional stressors,
 ##' temperature and salinity.
 ##'
 ##' Samples of an aqueous solution of a toxin, of varying
@@ -24,14 +34,14 @@ NULL
 ##'
 ##' @format A data frame with 225 rows and 8 variables:
 ##' \describe{
-##'   \item{vial}{the replicate}
-##'   \item{temperature}{temperature of solution}
-##'   \item{salinity}{salinity of solution}
-##'   \item{group}{additinal stressor treatment groups}
-##'   \item{conc}{concentration of toxin in solution}
-##'   \item{total}{number of individuals in vial}
-##'   \item{alive}{number of survivors after 4 days}
-##'   \item{dead}{number of dead individuals after 4 days}
+##'   \item{vial}{The replicate}
+##'   \item{temperature}{Temperature of solution}
+##'   \item{salinity}{Salinity of solution}
+##'   \item{group}{Additinal stressor treatment groups}
+##'   \item{conc}{Concentration of toxin in solution}
+##'   \item{total}{Number of individuals in vial}
+##'   \item{alive}{Number of survivors after 4 days}
+##'   \item{dead}{Number of dead individuals after 4 days}
 ##' }
 ##'
 "toxicity"
