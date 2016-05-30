@@ -22,9 +22,9 @@ NULL
 
 ##' Simulated toxicity data
 ##'
-##' A simulated dataset showing the individual survival within replicates, following exposure
-##' to a known toxin in the presence of the additional stressors,
-##' temperature and salinity.
+##' A simulated dataset showing the individual survival within
+##' replicates, following exposure to a known toxin in the presence of
+##' the additional stressors, temperature and salinity.
 ##'
 ##' Samples of an aqueous solution of a toxin, of varying
 ##' concentrations, are prepared for each of three salinities and are
@@ -58,20 +58,21 @@ NULL
 ##'
 ##'
 ##' @title Estimate LCx for a toxin
-##' @param formula a formula relating log LCx to covariates
-##' describing the aditional stressors.
+##' @param formula a formula relating log LCx to covariates describing
+##'   the aditional stressors.
 ##' @param concentration the name of variable that is the
-##' concentration of the toxin.
-##' @param group a factor distinguishing treatment groups for the additional stressors.
+##'   concentration of the toxin.
+##' @param group a factor distinguishing treatment groups for the
+##'   additional stressors.
 ##' @param data data frame containing variables in the model.
 ##' @param start Starting values used to initialize the model.  If
-##' \code{start=NULL} these parameters are determined by
-##' \code{\link{lcx.initialize}}.
+##'   \code{start=NULL} these parameters are determined by
+##'   \code{\link{lcx.initialize}}.
 ##' @param link the link function for survival fractions
 ##' @param lethal the modelled level of lethality
 ##' @param quasi should a quasibinomial model be fitted.
 ##' @param common.background should a common background survival be
-##' estimated for each treatment group.
+##'   estimated for each treatment group.
 ##' @param rate.shrink the shrinkage penalty for the rate parameters
 ##' @param optim.control control parameters for \code{optim}
 ##' @param X a design matrix
@@ -301,10 +302,11 @@ lcx.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,lethal,
 ##' to initialize an \code{\link{lcx}} model.
 ##'
 ##' @title Starting parameters for an LCx model fit
-##' @param Y a two column matrix of the number of survivals and mortalities in each sample.
+##' @param Y a two column matrix of the number of survivals and
+##'   mortalities in each sample.
 ##' @param conc a vector of tixin concentrations
 ##' @param group a factor delineating treatment groups
-##' @param link  the link function for survival fractions
+##' @param link the link function for survival fractions
 ##' @param lethal the modelled level of lethality
 ##' @return Return a list of with components
 ##' \item{\code{alpha}}{the rate parameter for each treatment group}
@@ -352,15 +354,18 @@ print.lcx <- function(x,digits = max(3L, getOption("digits") - 3L),...) {
 ##'
 ##' @title Summmarizing LCx model fits
 ##' @param object an object of class \code{lcx}, obtained as the
-##' result of a call to \code{\link{lcx}}
-##' @param background if \code{TRUE} a summary table for the background survival is calculated
-##' @param rate if \code{TRUE} a summary table for the rate parameters is calculated
+##'   result of a call to \code{\link{lcx}}
+##' @param background if \code{TRUE} a summary table for the
+##'   background survival is calculated
+##' @param rate if \code{TRUE} a summary table for the rate parameters
+##'   is calculated
 ##' @param ... additional parameters are ignored.
 ##' @param x an object of class \code{summary.lcx}, usually, a result
-##' of a call to \code{summary.lcx}.
-##' @param digits the number of significant digits to use when printing.
+##'   of a call to \code{summary.lcx}.
+##' @param digits the number of significant digits to use when
+##'   printing.
 ##' @param signif.stars logical. If \code{TRUE}, 'significance stars'
-##' are printed for each coefficient.
+##'   are printed for each coefficient.
 ##' @return Returns an object of class \code{summary.lcx}, with components
 ##' \item{\code{coefficients}}{a table of coefficients.}
 ##' \item{\code{lcx}}{a table of LCx for each treatment group.}
