@@ -305,3 +305,50 @@ ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
   geom_rect(aes(x=Estimate,y=0,xmin=`Lwr 95%`,xmax=`Upr 95%`,ymin=0,ymax=1,fill=group),data=d.lc50,alpha=0.2,color=NA)+
   facet_grid(temperature~salinity)
 ```
+
+
+## LCx
+
+By default all calculations are performed based on LC50, but it is
+possible to perform the analysis based on other lethal concentrations.
+
+To repeat the basic analysis above for LC10
+```{r}
+fit <- lcx(cbind(alive,dead)~salinity*temperature,concentration=conc,group=group,data=toxicity,lethal=10)
+summary(fit)
+```
+
+Changing the reference lethality imacts inferences - for the LC10
+there is strong evidence of a salinity by temperature interaction
+```{r}
+anova(fit,test="Chisq")
+```
+
+```{r,fig.width=7,fig.height=6}
+d.lcx <- with(summary(fit),
+               cbind(lcx,
+                     toxicity[match(rownames(lcx),toxicity$group),
+                              c("group","salinity","temperature")]))
+ggplot(d.lcx,aes(x=group,y=LC10))+
+  geom_linerange(mapping=aes(x=group,ymin=`Lwr 95%`,ymax=`Upr 95%`),col="dodgerblue1",lwd=3)+
+  geom_point()
+```
+
+
+
+
+```{r,fig.width=7,fig.height=6}
+d.pr <- expand.grid(temperature=factor(c(12,14,16)),
+                    salinity=factor(c(31,33,35)),
+                    conc=0:90)
+d.pr$group <- with(d.pr,interaction(temperature,salinity,sep="|"))
+d.pr$survival <- predict(fit,d.pr)
+ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
+  geom_point()+
+  geom_line(aes(x=conc,y=survival,colour=group),data=d.pr)+
+  geom_vline(aes(xintercept=LC5,colour=group),data=d.lcx)+
+  geom_rect(aes(x=Estimate,y=0,xmin=`Lwr 95%`,xmax=`Upr 95%`,ymin=0,ymax=1,fill=group),data=d.lcx,alpha=0.2,color=NA)+
+  facet_grid(temperature~salinity)
+```
+
+
