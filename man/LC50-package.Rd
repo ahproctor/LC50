@@ -6,19 +6,8 @@
 \title{LC50 lethal concentrations in the presence of additional stressors.}
 \description{
 Provides facilities for estimating lethal concentrations for a
-toxin from single time point survival data in the presence of
+toxin from destructively sampled survival data in the presence of
 additional stressors and non-ignorable control mortality.
-}
-\details{
-A common 'critical effect concentration' used in toxicology
-bioassays is the LCx, the contetration that is lethal to x% of the
-tested population.  This package provides the facilities for
-estimating the LCx for a toxicant from single time point survival
-data in the presence of additional stressors and non-ignorable
-control mortality.  It is assumed that the additional stressors are
-applied in a factorial design, and within each treatment
-combination, a standard bioassay is conducted to estimate the
-treatment specific LCx for the toxicant.
 }
 \author{
 S. Wotherspoon, A. Proctor.

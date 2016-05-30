@@ -6,21 +6,21 @@
 \title{Simulated toxicity data}
 \format{A data frame with 225 rows and 8 variables:
 \describe{
-  \item{vial}{The replicate}
-  \item{temperature}{Temperature of solution}
-  \item{salinity}{Salinity of solution}
-  \item{group}{Additinal stressor treatment groups}
-  \item{conc}{Concentration of toxin in solution}
-  \item{total}{Number of individuals in vial}
-  \item{alive}{Number of survivors after 4 days}
-  \item{dead}{Number of dead individuals after 4 days}
+  \item{vial}{the replicate}
+  \item{temperature}{temperature of solution}
+  \item{salinity}{salinity of solution}
+  \item{group}{additinal stressor treatment groups}
+  \item{conc}{concentration of toxin in solution}
+  \item{total}{number of individuals in vial}
+  \item{alive}{number of survivors after 4 days}
+  \item{dead}{number of dead individuals after 4 days}
 }}
 \usage{
 toxicity
 }
 \description{
-A simulated dataset showing the individual survival within replicates, following exposure
-to a known toxin in the presence of the additional stressors,
+A simulated dataset showing individual survival following exposure
+to a known toxin in the presence of the additional stressors
 temperature and salinity.
 }
 \details{
