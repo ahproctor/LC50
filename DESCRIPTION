@@ -7,18 +7,21 @@ Authors@R: as.person(c(
     "Abigael Proctor <Abigael.Proctor@aad.gov.au> [aut, cre]",
     "Simon Wotherspoon <Simon.Wotherspoon@utas.edu.au> [aut]"))
 Depends:
-    R(>= 3.0.1)
+    R(>= 3.2.0)
 Suggests:
     effects,
     ggplot2,
     gridExtra,
     knitr,
+    rmarkdown,
     multcomp,
     rjags
 Imports:
     stats,
     MASS
-Description: This is what it does.
+Description: Provides facilities for estimating lethal concentrations
+    for a toxin from single time point survival data in the presence
+    of additional stressors and non-ignorable control mortality.
 NeedsCompilation: no
 ByteCompile: yes
 License: GPL-3
