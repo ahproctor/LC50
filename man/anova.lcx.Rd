@@ -10,12 +10,12 @@
 \method{anova}{lcxlist}(object, ..., test = NULL)
 }
 \arguments{
-\item{object}{an object of class \code{lcx}, usually obtained as the
-results from a call to \code{\link{lcx}}}
+\item{object}{An object of class \code{lcx}, usually obtained as the
+results from a call to \code{\link{lcx}}.}
 
-\item{...}{additional objects of class \code{lcx}.}
+\item{...}{Additional objects of class \code{lcx}.}
 
-\item{test}{a character string, partially matching one of
+\item{test}{A character string, partially matching one of
 "\code{LRT}", "\code{Chisq}", or "\code{Cp}". See
 \code{link{stat.anova}}.}
 }

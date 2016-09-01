@@ -21,7 +21,7 @@ relates survival to log toxin concentration, adjusting for background
 mortality and assuming a linear relation between log LCx and
 descriptors of the additional stressors.
 
-More precisely, the a Binomial regression model parametrized in terms
+More precisely, the a Binomial regression model parameterized in terms
 of log LCx is used to relate survival to log toxin concentration
 \[
 \begin{align}
@@ -38,7 +38,7 @@ of log LCx is used to relate survival to log toxin concentration
 \]
 
 Here \(y_{ijk}\) is the number of survivors at the end of the trial
-from \(N_{ijk}\) individuals in replicate \(i\) recieving target toxin
+from \(N_{ijk}\) individuals in replicate \(i\) receiving target toxin
 concentration \(j\) and combination \(k\) of additional stressors and
 actual measured concentration \(C_{ijk}\), \(\pi_{ijk}\) is the
 fraction of individuals expected to survive which is decomposed into a
@@ -111,7 +111,7 @@ arguments:
   recording the concentration of the toxin, and
 
 * the `group` argument names a factor in the dataframe that
-  disinguishes the combinations of additional stressors.  The model
+  distinguishes the combinations of additional stressors.  The model
   requires that the terms of linear predictor for log LCx are
   constant within levels of this factor.
 
@@ -261,7 +261,7 @@ summary(s)
 In trials with few distinct concentrations, the rate parameters
 \(\alpha_{i}\) can be poorly resolved.  When these rates are
 overestimated the confidence intervals for the LC50 can be too
-short. The `rate.shrink` parameter adds a penalty to the likelhood to
+short. The `rate.shrink` parameter adds a penalty to the likelihood to
 shrink the \(\alpha_{i}\) back towards zero.
 
 Without shrinkage, the estimates of some of the rate parameters for
@@ -318,7 +318,7 @@ fit <- lcx(cbind(alive,dead)~salinity*temperature,concentration=conc,group=group
 summary(fit)
 ```
 
-Changing the reference lethality imacts inferences - for the LC10
+Changing the reference lethality impacts inferences - for the LC10
 there is strong evidence of a salinity by temperature interaction
 ```{r}
 anova(fit,test="Chisq")
@@ -346,7 +346,7 @@ d.pr$survival <- predict(fit,d.pr)
 ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
   geom_point()+
   geom_line(aes(x=conc,y=survival,colour=group),data=d.pr)+
-  geom_vline(aes(xintercept=LC5,colour=group),data=d.lcx)+
+  geom_vline(aes(xintercept=LC10,colour=group),data=d.lcx)+
   geom_rect(aes(x=Estimate,y=0,xmin=`Lwr 95%`,xmax=`Upr 95%`,ymin=0,ymax=1,fill=group),data=d.lcx,alpha=0.2,color=NA)+
   facet_grid(temperature~salinity)
 ```

@@ -9,7 +9,7 @@
   \item{vial}{The replicate}
   \item{temperature}{Temperature of solution}
   \item{salinity}{Salinity of solution}
-  \item{group}{Additinal stressor treatment groups}
+  \item{group}{Additional stressor treatment groups}
   \item{conc}{Concentration of toxin in solution}
   \item{total}{Number of individuals in vial}
   \item{alive}{Number of survivors after 4 days}
@@ -19,16 +19,16 @@
 toxicity
 }
 \description{
-A simulated dataset showing the individual survival within replicates, following exposure
-to a known toxin in the presence of the additional stressors,
-temperature and salinity.
+A simulated dataset showing the individual survival within
+replicates following exposure to a known toxin in the presence of
+the additional stressors, temperature and salinity.
 }
 \details{
-Samples of an aqueous solution of a toxin, of varying
-concentrations, are prepared for each of three salinities and are
+Samples of an aqueous solution of a toxin of varying
+concentrations are prepared for each of three salinities and are
 held at one of three constant temperatures.  Approximately 10
 individuals were added to each sample and the number of survivors
-recorded at the end of four days exposure.
+recorded at the end of four days of exposure.
 }
 \keyword{datasets}
 

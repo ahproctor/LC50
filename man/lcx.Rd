@@ -13,44 +13,44 @@ lcx.fit(X, Y, conc, group, alpha, beta, gamma, link, lethal, quasi = FALSE,
   common.background = FALSE, rate.shrink = 0, optim.control = list())
 }
 \arguments{
-\item{formula}{a formula relating log LCx to covariates
-describing the aditional stressors.}
+\item{formula}{A formula relating log LCx to covariates
+describing the additional stressors.}
 
-\item{concentration}{the name of variable that is the
+\item{concentration}{The name of variable that is the
 concentration of the toxin.}
 
-\item{group}{a factor distinguishing treatment groups for the additional stressors.}
+\item{group}{A factor distinguishing treatment groups for the additional stressors.}
 
-\item{data}{data frame containing variables in the model.}
+\item{data}{Dataframe containing the variables in the model.}
 
 \item{start}{Starting values used to initialize the model.  If
 \code{start=NULL} these parameters are determined by
 \code{\link{lcx.initialize}}.}
 
-\item{link}{the link function for survival fractions}
+\item{link}{The link function for survival fractions.}
 
-\item{lethal}{the modelled level of lethality}
+\item{lethal}{The level of lethality (ie "x") to be estimated.}
 
-\item{quasi}{should a quasibinomial model be fitted.}
+\item{quasi}{Should a quasibinomial model be fitted?}
 
-\item{common.background}{should a common background survival be
-estimated for each treatment group.}
+\item{common.background}{Should a common background survival be
+estimated for each treatment group?}
 
-\item{rate.shrink}{the shrinkage penalty for the rate parameters}
+\item{rate.shrink}{The shrinkage penalty for the rate parameters.}
 
-\item{optim.control}{control parameters for \code{optim}}
+\item{optim.control}{Control parameters for \code{optim}.}
 
-\item{X}{a design matrix}
+\item{X}{A design matrix.}
 
-\item{Y}{a two column matrix of responses}
+\item{Y}{A two column matrix of responses.}
 
-\item{conc}{a vector of toxin concentrations}
+\item{conc}{A vector of toxin concentrations.}
 
-\item{alpha}{vector of starting rate parameters}
+\item{alpha}{The vector of starting rate parameters.}
 
-\item{beta}{vector of starting coefficients}
+\item{beta}{The vector of starting coefficients.}
 
-\item{gamma}{vector of background survival parameters}
+\item{gamma}{The vector of background survival parameters.}
 }
 \value{
 \code{lcx} returns an object of class inheriting from
@@ -64,7 +64,7 @@ for the tests of additional stressor effects.
 
 An LCx model has several sets of coefficients, the generic
 accessor function \code{\link{coef}} returns only the beta
-coeffients.
+coefficients.
 
 An object of class "lcx" is a list containing at least the
 following components:
@@ -106,13 +106,16 @@ following components:
 }
 \description{
 Estimate LCx from survival data in the presence of additional
-stressors and non-ignorable control mortality
+stressors and non-ignorable control mortality.
 }
 \details{
-DESCRIBE the model.
+The details of the model are described in the package vignette.
 
 \code{lcx.fit} is the workhorse function: it is not normally
-called directly but can be more efficient where the response
+called directly but can be more efficient when the response
 vector, design matrix and family have already been calculated.
+}
+\seealso{
+\code{\link{lcxJAGS}}
 }
 

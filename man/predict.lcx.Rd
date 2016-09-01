@@ -7,26 +7,26 @@
 \method{predict}{lcx}(object, newdata, type = c("response", "adjusted"), ...)
 }
 \arguments{
-\item{object}{object an object of class \code{lcx}, obtained as the
+\item{object}{An object of class \code{lcx}, obtained as the
 result of a call to \code{\link{lcx}}}
 
-\item{newdata}{optionally, a data frame in which to look for
+\item{newdata}{Optionally, a data frame in which to look for
 variables with which to predict. If omitted, the fitted linear
 predictors are used.}
 
-\item{type}{the type of prediction required. If
+\item{type}{The type of prediction required. If
 \code{type="response"} predictions include both the background
 mortality and the mortality due to the toxin, but if
 \code{type="adjusted"} predictions only reflect mortality due to
 the toxin.}
 
-\item{...}{further arguments passed to or from other methods.}
+\item{...}{Further arguments passed to or from other methods.}
 }
 \value{
-a vector of predicted survival fractions.
+Return a vector of predicted survival fractions.
 }
 \description{
-Predicted survival from a fitted LCx object
+Predict survival rates from a fitted LCx object.
 }
 \details{
 If \code{newdata} is omitted the predictions are based on the data

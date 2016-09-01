@@ -20,11 +20,11 @@ lcx.initialize(Y, conc, group, link = c("probit", "logit"), lethal)
 \value{
 Return a list of with components
 \item{\code{alpha}}{the rate parameter for each treatment group}
-\item{\code{gamma}}{the probit of the control surival for each treatment group}
+\item{\code{gamma}}{the probit of the control survival for each treatment group}
 \item{\code{loglcx}}{the log lcx for each treatment group}
 }
 \description{
-Estimate starting parameters for and LCx model fit
+Estimate starting parameters for an LCx model fit.
 }
 \details{
 This is the default method for computing the starting values used

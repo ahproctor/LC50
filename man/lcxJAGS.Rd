@@ -10,45 +10,45 @@ lcxJAGS(formula, concentration, group, data, start = NULL,
   beta.mu = 0, beta.tau = 1e-04, gamma.mu = 0, gamma.tau = 1e-04)
 }
 \arguments{
-\item{formula}{a formula relating log LCx to covariates
-describing the aditional stressors.}
+\item{formula}{A formula relating log LCx to covariates
+describing the additional stressors.}
 
-\item{concentration}{the name of variable that is the
+\item{concentration}{The name of variable that is the
 concentration of the toxin.}
 
-\item{group}{a factor distinguishing treatment groups for the additional stressors.}
+\item{group}{A factor distinguishing treatment groups for the additional stressors.}
 
-\item{data}{data frame containing variables in the model.}
+\item{data}{Dataframe containing the variables in the model.}
 
 \item{start}{Starting values used to initialize the model.  If
 \code{start=NULL} these parameters are determined by
 \code{\link{lcx.initialize}}.}
 
-\item{link}{the link function for survival fractions}
+\item{link}{The link function for survival fractions.}
 
-\item{lethal}{the modelled level of lethality}
+\item{lethal}{The level of lethality (ie "x") to be estimated.}
 
-\item{common.background}{should a common background survival be
-estimated for each treatment group.}
+\item{common.background}{Should a common background survival be
+estimated for each treatment group?}
 
-\item{n.adapt}{parameter passed to \code{jags.model}}
+\item{n.adapt}{Parameter passed to \code{jags.model}.}
 
-\item{n.chains}{parameter passed to \code{jags.model}}
+\item{n.chains}{Parameter passed to \code{jags.model}.}
 
-\item{alpha.mu}{prior mean for alpha}
+\item{alpha.mu}{Prior mean for alpha.}
 
-\item{alpha.tau}{prior precision for alpha}
+\item{alpha.tau}{Prior precision for alpha.}
 
-\item{beta.mu}{either a single prior mean for all beta parameters,
+\item{beta.mu}{Either a single prior mean for all beta parameters,
 or a vector of prior means, one for each parameter.}
 
-\item{beta.tau}{either a single prior precision for all beta
+\item{beta.tau}{Either a single prior precision for all beta
 parameters, or a vector of prior precisions, one for each
 parameter.}
 
-\item{gamma.mu}{prior mean for gamma}
+\item{gamma.mu}{Prior mean for gamma.}
 
-\item{gamma.tau}{prior precision for gamma}
+\item{gamma.tau}{Prior precision for gamma.}
 }
 \value{
 Returns an object inheriting from class \code{jags} which
@@ -68,6 +68,10 @@ the posterior using \code{update} and \code{coda.samples} from
 The model assumes half Normal priors for \code{alpha} and Normal
 priors for \code{beta} and \code{gamma}.  For \code{alpha} and
 \code{gamma}, a single prior mean and precision is assumed for all
-groups, for \code{beta} individual prior means and precisions can be specified
+groups, for \code{beta} individual prior means and precisions can
+be specified.
+}
+\seealso{
+\code{\link{lcx}}
 }
 

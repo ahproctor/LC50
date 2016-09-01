@@ -11,7 +11,7 @@ additional stressors and non-ignorable control mortality.
 }
 \details{
 A common 'critical effect concentration' used in toxicology
-bioassays is the LCx, the contetration that is lethal to x% of the
+bioassays is the LCx, the concentration that is lethal to x% of the
 tested population.  This package provides the facilities for
 estimating the LCx for a toxicant from single time point survival
 data in the presence of additional stressors and non-ignorable
