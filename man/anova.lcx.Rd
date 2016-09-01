@@ -10,8 +10,8 @@
 \method{anova}{lcxlist}(object, ..., test = NULL)
 }
 \arguments{
-\item{object}{An object of class \code{lcx}, usually obtained as the
-results from a call to \code{\link{lcx}}.}
+\item{object}{An object of class \code{lcx}, usually obtained as
+the results from a call to \code{\link{lcx}}.}
 
 \item{...}{Additional objects of class \code{lcx}.}
 

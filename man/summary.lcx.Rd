@@ -14,16 +14,19 @@
 \item{object}{An object of class \code{lcx}, obtained as the
 result of a call to \code{\link{lcx}}.}
 
-\item{background}{If \code{TRUE} a summary table for the background survival is calculated.}
+\item{background}{If \code{TRUE} a summary table for the
+background survival is calculated.}
 
-\item{rate}{If \code{TRUE} a summary table for the rate parameters is calculated,}
+\item{rate}{If \code{TRUE} a summary table for the rate parameters
+is calculated.}
 
 \item{...}{additional parameters are ignored.}
 
 \item{x}{An object of class \code{summary.lcx}, usually, a result
 of a call to \code{summary.lcx}.}
 
-\item{digits}{The number of significant digits to use when printing.}
+\item{digits}{The number of significant digits to use when
+printing.}
 
 \item{signif.stars}{logical. If \code{TRUE}, 'significance stars'
 are printed for each coefficient.}
@@ -32,8 +35,10 @@ are printed for each coefficient.}
 Returns an object of class \code{summary.lcx}, with components
 \item{\code{coefficients}}{a table of coefficients.}
 \item{\code{lcx}}{a table of LCx for each treatment group.}
-\item{\code{bsurv}}{optionally, a table of background survival for each treatment group.}
-\item{\code{rate}}{optionally, a table of rates for each treatment group.}
+\item{\code{bsurv}}{optionally, a table of background survival for
+each treatment group.}
+\item{\code{rate}}{optionally, a table of rates for each treatment
+group.}
 }
 \description{
 Summary method for class "\code{lcx}".

@@ -57,20 +57,21 @@ NULL
 ##' vector, design matrix and family have already been calculated.
 ##'
 ##' @title Estimate LCx for a toxin
-##' @param formula A formula relating log LCx to covariates
-##' describing the additional stressors.
+##' @param formula A formula relating log LCx to covariates describing
+##'   the additional stressors.
 ##' @param concentration The name of variable that is the
-##' concentration of the toxin.
-##' @param group A factor distinguishing treatment groups for the additional stressors.
+##'   concentration of the toxin.
+##' @param group A factor distinguishing treatment groups for the
+##'   additional stressors.
 ##' @param data Dataframe containing the variables in the model.
 ##' @param start Starting values used to initialize the model.  If
-##' \code{start=NULL} these parameters are determined by
-##' \code{\link{lcx.initialize}}.
+##'   \code{start=NULL} these parameters are determined by
+##'   \code{\link{lcx.initialize}}.
 ##' @param link The link function for survival fractions.
 ##' @param lethal The level of lethality (ie "x") to be estimated.
 ##' @param quasi Should a quasibinomial model be fitted?
 ##' @param common.background Should a common background survival be
-##' estimated for each treatment group?
+##'   estimated for each treatment group?
 ##' @param rate.shrink The shrinkage penalty for the rate parameters.
 ##' @param optim.control Control parameters for \code{optim}.
 ##' @param X A design matrix.
@@ -81,7 +82,7 @@ NULL
 ##' @param gamma The vector of background survival parameters.
 ##' @seealso \code{\link{lcxJAGS}}
 ##' @return \code{lcx} returns an object of class inheriting from
-##' "lcx". See later in this section.
+##'   "lcx". See later in this section.
 ##'
 ##' The function \code{\link{summary}} (i.e.,
 ##' \code{link{summary.lcx}}) can be used to obtain or print a
@@ -108,7 +109,7 @@ NULL
 ##' \item{\code{cov.unscaled}}{covariance of the lcx model coefficients.}
 ##' \item{\code{loglcx}}{a named vector of log lcxs for the treatment groups.}
 ##' \item{\code{loglcx.cov}}{covariance of the lcxs for the treatment groups.}
-##' \item{\code{concentration}}{a vector of taxin concentrations.}
+##' \item{\code{concentration}}{a vector of toxin concentrations.}
 ##' \item{\code{group}}{a factor distinguishing treatment groups.}
 ##' \item{\code{x}}{a design matrix relating log lcx to factors describing the additional stressors.}
 ##' \item{\code{y}}{a two column matrix of responses, giving the survivals and mortalities.}
@@ -298,14 +299,16 @@ lcx.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,lethal,
 ##' to initialize an \code{\link{lcx}} model.
 ##'
 ##' @title Starting parameters for an LCx model fit
-##' @param Y a two column matrix of the number of survivals and mortalities in each sample.
-##' @param conc a vector of tixin concentrations
+##' @param Y a two column matrix of the number of survivals and
+##'   mortalities in each sample.
+##' @param conc a vector of toxin concentrations
 ##' @param group a factor delineating treatment groups
-##' @param link  the link function for survival fractions
+##' @param link the link function for survival fractions
 ##' @param lethal the modelled level of lethality
 ##' @return Return a list of with components
 ##' \item{\code{alpha}}{the rate parameter for each treatment group}
-##' \item{\code{gamma}}{the probit of the control survival for each treatment group}
+##' \item{\code{gamma}}{the probit of the control survival for each
+##' treatment group}
 ##' \item{\code{loglcx}}{the log lcx for each treatment group}
 ##' @importFrom stats qnorm qlogis binomial glm.fit
 ##' @export
@@ -352,20 +355,25 @@ print.lcx <- function(x,digits = max(3L, getOption("digits") - 3L),...) {
 ##'
 ##' @title Summarizing LCx model fits
 ##' @param object An object of class \code{lcx}, obtained as the
-##' result of a call to \code{\link{lcx}}.
-##' @param background If \code{TRUE} a summary table for the background survival is calculated.
-##' @param rate If \code{TRUE} a summary table for the rate parameters is calculated,
+##'   result of a call to \code{\link{lcx}}.
+##' @param background If \code{TRUE} a summary table for the
+##'   background survival is calculated.
+##' @param rate If \code{TRUE} a summary table for the rate parameters
+##'   is calculated.
 ##' @param ... additional parameters are ignored.
 ##' @param x An object of class \code{summary.lcx}, usually, a result
-##' of a call to \code{summary.lcx}.
-##' @param digits The number of significant digits to use when printing.
+##'   of a call to \code{summary.lcx}.
+##' @param digits The number of significant digits to use when
+##'   printing.
 ##' @param signif.stars logical. If \code{TRUE}, 'significance stars'
-##' are printed for each coefficient.
+##'   are printed for each coefficient.
 ##' @return Returns an object of class \code{summary.lcx}, with components
 ##' \item{\code{coefficients}}{a table of coefficients.}
 ##' \item{\code{lcx}}{a table of LCx for each treatment group.}
-##' \item{\code{bsurv}}{optionally, a table of background survival for each treatment group.}
-##' \item{\code{rate}}{optionally, a table of rates for each treatment group.}
+##' \item{\code{bsurv}}{optionally, a table of background survival for
+##' each treatment group.}
+##' \item{\code{rate}}{optionally, a table of rates for each treatment
+##' group.}
 ##' @importFrom stats pnorm plogis
 ##' @export
 summary.lcx <- function(object,background=TRUE,rate=FALSE,...) {
@@ -442,10 +450,6 @@ print.summary.lcx <- function(x,digits=max(3L,getOption("digits")-3L),
 }
 
 
-
-
-
-
 ##' Compute an analysis of deviance table for an LCx model fit.
 ##'
 ##' Specifying a single object gives a sequential analysis of deviance
@@ -465,12 +469,12 @@ print.summary.lcx <- function(x,digits=max(3L,getOption("digits")-3L),
 ##' the row to the residuals.
 ##'
 ##' @title Analysis of Deviance for lcx model fits
-##' @param object An object of class \code{lcx}, usually obtained as the
-##' results from a call to \code{\link{lcx}}.
+##' @param object An object of class \code{lcx}, usually obtained as
+##'   the results from a call to \code{\link{lcx}}.
 ##' @param ... Additional objects of class \code{lcx}.
 ##' @param test A character string, partially matching one of
-##' "\code{LRT}", "\code{Chisq}", or "\code{Cp}". See
-##' \code{link{stat.anova}}.
+##'   "\code{LRT}", "\code{Chisq}", or "\code{Cp}". See
+##'   \code{link{stat.anova}}.
 ##' @return An object of class \code{anova} inheriting from class
 ##' \code{data.frame}.
 ##' @importFrom stats anova model.matrix stat.anova
@@ -652,15 +656,15 @@ simulate.lcx <- function(object, nsim=1, seed=NULL, ...) {
 ##'
 ##' @title Predict method for LCx fits
 ##' @param object An object of class \code{lcx}, obtained as the
-##' result of a call to \code{\link{lcx}}
+##'   result of a call to \code{\link{lcx}}
 ##' @param newdata Optionally, a data frame in which to look for
-##' variables with which to predict. If omitted, the fitted linear
-##' predictors are used.
+##'   variables with which to predict. If omitted, the fitted linear
+##'   predictors are used.
 ##' @param type The type of prediction required. If
-##' \code{type="response"} predictions include both the background
-##' mortality and the mortality due to the toxin, but if
-##' \code{type="adjusted"} predictions only reflect mortality due to
-##' the toxin.
+##'   \code{type="response"} predictions include both the background
+##'   mortality and the mortality due to the toxin, but if
+##'   \code{type="adjusted"} predictions only reflect mortality due to
+##'   the toxin.
 ##' @param ... Further arguments passed to or from other methods.
 ##' @return Return a vector of predicted survival fractions.
 ##' @importFrom stats predict model.matrix delete.response pnorm plogis qnorm qlogis
@@ -723,34 +727,35 @@ predict.lcx <- function (object, newdata, type = c("response", "adjusted"),...) 
 ##' be specified.
 ##'
 ##' @title Estimate LCx for a toxin
-##' @param formula A formula relating log LCx to covariates
-##' describing the additional stressors.
+##' @param formula A formula relating log LCx to covariates describing
+##'   the additional stressors.
 ##' @param concentration The name of variable that is the
-##' concentration of the toxin.
-##' @param group A factor distinguishing treatment groups for the additional stressors.
+##'   concentration of the toxin.
+##' @param group A factor distinguishing treatment groups for the
+##'   additional stressors.
 ##' @param data Dataframe containing the variables in the model.
 ##' @param start Starting values used to initialize the model.  If
-##' \code{start=NULL} these parameters are determined by
-##' \code{\link{lcx.initialize}}.
+##'   \code{start=NULL} these parameters are determined by
+##'   \code{\link{lcx.initialize}}.
 ##' @param link The link function for survival fractions.
 ##' @param lethal The level of lethality (ie "x") to be estimated.
 ##' @param common.background Should a common background survival be
-##' estimated for each treatment group?
+##'   estimated for each treatment group?
 ##' @param n.adapt Parameter passed to \code{jags.model}.
 ##' @param n.chains Parameter passed to \code{jags.model}.
 ##' @param alpha.mu Prior mean for alpha.
 ##' @param alpha.tau Prior precision for alpha.
 ##' @param beta.mu Either a single prior mean for all beta parameters,
-##' or a vector of prior means, one for each parameter.
+##'   or a vector of prior means, one for each parameter.
 ##' @param beta.tau Either a single prior precision for all beta
-##' parameters, or a vector of prior precisions, one for each
-##' parameter.
+##'   parameters, or a vector of prior precisions, one for each
+##'   parameter.
 ##' @param gamma.mu Prior mean for gamma.
 ##' @param gamma.tau Prior precision for gamma.
 ##' @seealso \code{\link{lcx}}
 ##' @return Returns an object inheriting from class \code{jags} which
-##' can be used to generate dependent samples from the posterior
-##' distribution of the parameters
+##'   can be used to generate dependent samples from the posterior
+##'   distribution of the parameters
 ##' @importFrom stats qnorm qlogis model.matrix model.frame model.response
 ##' @export
 lcxJAGS <- function(formula,concentration,group,data,start=NULL,

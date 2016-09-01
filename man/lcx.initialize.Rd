@@ -7,9 +7,10 @@
 lcx.initialize(Y, conc, group, link = c("probit", "logit"), lethal)
 }
 \arguments{
-\item{Y}{a two column matrix of the number of survivals and mortalities in each sample.}
+\item{Y}{a two column matrix of the number of survivals and
+mortalities in each sample.}
 
-\item{conc}{a vector of tixin concentrations}
+\item{conc}{a vector of toxin concentrations}
 
 \item{group}{a factor delineating treatment groups}
 
@@ -20,7 +21,8 @@ lcx.initialize(Y, conc, group, link = c("probit", "logit"), lethal)
 \value{
 Return a list of with components
 \item{\code{alpha}}{the rate parameter for each treatment group}
-\item{\code{gamma}}{the probit of the control survival for each treatment group}
+\item{\code{gamma}}{the probit of the control survival for each
+treatment group}
 \item{\code{loglcx}}{the log lcx for each treatment group}
 }
 \description{

@@ -13,13 +13,14 @@ lcx.fit(X, Y, conc, group, alpha, beta, gamma, link, lethal, quasi = FALSE,
   common.background = FALSE, rate.shrink = 0, optim.control = list())
 }
 \arguments{
-\item{formula}{A formula relating log LCx to covariates
-describing the additional stressors.}
+\item{formula}{A formula relating log LCx to covariates describing
+the additional stressors.}
 
 \item{concentration}{The name of variable that is the
 concentration of the toxin.}
 
-\item{group}{A factor distinguishing treatment groups for the additional stressors.}
+\item{group}{A factor distinguishing treatment groups for the
+additional stressors.}
 
 \item{data}{Dataframe containing the variables in the model.}
 
@@ -54,7 +55,7 @@ estimated for each treatment group?}
 }
 \value{
 \code{lcx} returns an object of class inheriting from
-"lcx". See later in this section.
+  "lcx". See later in this section.
 
 The function \code{\link{summary}} (i.e.,
 \code{link{summary.lcx}}) can be used to obtain or print a
@@ -81,7 +82,7 @@ following components:
 \item{\code{cov.unscaled}}{covariance of the lcx model coefficients.}
 \item{\code{loglcx}}{a named vector of log lcxs for the treatment groups.}
 \item{\code{loglcx.cov}}{covariance of the lcxs for the treatment groups.}
-\item{\code{concentration}}{a vector of taxin concentrations.}
+\item{\code{concentration}}{a vector of toxin concentrations.}
 \item{\code{group}}{a factor distinguishing treatment groups.}
 \item{\code{x}}{a design matrix relating log lcx to factors describing the additional stressors.}
 \item{\code{y}}{a two column matrix of responses, giving the survivals and mortalities.}

@@ -10,13 +10,14 @@ lcxJAGS(formula, concentration, group, data, start = NULL,
   beta.mu = 0, beta.tau = 1e-04, gamma.mu = 0, gamma.tau = 1e-04)
 }
 \arguments{
-\item{formula}{A formula relating log LCx to covariates
-describing the additional stressors.}
+\item{formula}{A formula relating log LCx to covariates describing
+the additional stressors.}
 
 \item{concentration}{The name of variable that is the
 concentration of the toxin.}
 
-\item{group}{A factor distinguishing treatment groups for the additional stressors.}
+\item{group}{A factor distinguishing treatment groups for the
+additional stressors.}
 
 \item{data}{Dataframe containing the variables in the model.}
 
@@ -52,8 +53,8 @@ parameter.}
 }
 \value{
 Returns an object inheriting from class \code{jags} which
-can be used to generate dependent samples from the posterior
-distribution of the parameters
+  can be used to generate dependent samples from the posterior
+  distribution of the parameters
 }
 \description{
 Bayesian estimates of LCx from survival data in the presence of additional
