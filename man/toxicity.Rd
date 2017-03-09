@@ -31,4 +31,3 @@ individuals were added to each sample and the number of survivors
 recorded at the end of four days of exposure.
 }
 \keyword{datasets}
-

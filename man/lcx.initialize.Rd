@@ -32,4 +32,3 @@ Estimate starting parameters for an LCx model fit.
 This is the default method for computing the starting values used
 to initialize an \code{\link{lcx}} model.
 }
-

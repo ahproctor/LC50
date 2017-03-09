@@ -75,4 +75,3 @@ be specified.
 \seealso{
 \code{\link{lcx}}
 }
-

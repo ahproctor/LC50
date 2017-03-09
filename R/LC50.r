@@ -217,7 +217,7 @@ lcx.fit <- function(X,Y,conc,group,alpha,beta,gamma,link,lethal,
   nlogL <- function(pars) {
     alpha <- pars[alpha.k]
     beta <- pars[beta.k]
-    gamma <- rep(pars[gamma.k],length.out=ng)
+    gamma <- pars[gamma.k]
     pq <- fitted.pq(alpha,beta,gamma)
     nll <- -sum(dbinom(y,N,pq,log=TRUE))+rate.shrink*sum(alpha^2)
     if(!is.finite(nll)) nll <- .Machine$double.xmax

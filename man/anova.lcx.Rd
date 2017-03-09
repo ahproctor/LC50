@@ -43,4 +43,3 @@ When \code{test} is "LRT" or "Chisq" the table will contain test
 statistics (and P values) comparing the reduction in deviance for
 the row to the residuals.
 }
-

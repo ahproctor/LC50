@@ -23,4 +23,3 @@ treatment specific LCx for the toxicant.
 \author{
 S. Wotherspoon, A. Proctor.
 }
-

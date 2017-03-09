@@ -34,4 +34,3 @@ used for the fit.  For \code{type="adjusted"}, it is assumed there
 is no background mortality and predictions are made based purely
 on the mortality due to the toxin.
 }
-

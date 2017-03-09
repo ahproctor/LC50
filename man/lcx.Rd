@@ -119,4 +119,3 @@ vector, design matrix and family have already been calculated.
 \seealso{
 \code{\link{lcxJAGS}}
 }
-
