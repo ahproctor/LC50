@@ -159,8 +159,12 @@ grid.arrange(
   layout_matrix=rbind(1,2:3))
 ```
 
-Alternately the **effects** package can be used to construct a graphical summary of the relation between LC50 and the additional stressors.
-```{r,fig.width=7,fig.height=6}
+Alternately the **effects** package can be used to construct a
+graphical summary of the relation between LC50 and the additional
+stressors.
+
+**Effects support currently broken for effects version 4**
+```{r,eval=FALSE,fig.width=7,fig.height=6}
 library(effects)
 plot(Effect(c("salinity","temperature"),fit,
             transformation=list(link=log,inverse=exp)))
