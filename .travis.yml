@@ -2,8 +2,8 @@
 
 language: R
 sudo: required
-before_install: 
-  echo "options(repos = c(CRAN='http://cran.rstudio.com'))" > ~/.Rprofile
-r_binary_packages:
-  - rjags
+cache: packages
+
+apt_packages:
+  - r-cran-rjags
 
