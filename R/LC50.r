@@ -583,6 +583,37 @@ model.matrix.lcx <- function(object,...) {
 }
 
 
+## This is a method for estimability
+##' @importFrom stats family
+##' @export
+family.lcx <- function(object,...) {
+  NULL
+}
+
+
+## This is a method for estimability
+##' @importFrom estimability nonest.basis
+##' @export
+nonest.basis.lcx <- function(x,...) {
+  nonest.basis(x$x)
+}
+
+
+## This is ripped off from Effect.lm
+##' @importFrom effects Effect
+##' @export
+Effect.lcx <- function(focal.predictors, mod,
+                       transformation = list(link = log, inverse = exp), ...) {
+  if(inherits(mod,"lm"))
+    NextMethod()
+  else {
+    class(mod) <- c(class(mod)[1],"lm",class(mod)[-1])
+    Effect(focal.predictors,mod,transformation=transformation,...)
+  }
+}
+
+
+
 ## This is ripped off from model.frame.lm
 ##' @importFrom stats terms model.frame
 ##' @export
@@ -652,7 +683,9 @@ simulate.lcx <- function(object, nsim=1, seed=NULL, ...) {
 ##' If \code{newdata} is omitted the predictions are based on the data
 ##' used for the fit.  For \code{type="adjusted"}, it is assumed there
 ##' is no background mortality and predictions are made based purely
-##' on the mortality due to the toxin.
+##' on the mortality due to the toxin. For \code{type="link"},
+##' predictions are returned on the scale of the link function, again
+##' ignoring any background mortality.
 ##'
 ##' @title Predict method for LCx fits
 ##' @param object An object of class \code{lcx}, obtained as the
@@ -669,7 +702,7 @@ simulate.lcx <- function(object, nsim=1, seed=NULL, ...) {
 ##' @return Return a vector of predicted survival fractions.
 ##' @importFrom stats predict model.matrix delete.response pnorm plogis qnorm qlogis
 ##' @export
-predict.lcx <- function (object, newdata, type = c("response", "adjusted"),...) {
+predict.lcx <- function (object, newdata, type = c("response", "adjusted","link"),...) {
 
   type <- match.arg(type)
 
@@ -705,9 +738,11 @@ predict.lcx <- function (object, newdata, type = c("response", "adjusted"),...) 
                    logit=qlogis(1-object$lethal/100))
 
   ## Predict survival fraction
-  p <- ilink(alpha[group]*(log(conc)-X%*%beta)+offset)
-  q <- if(type=="adjusted") 1 else ilink(if(!object$common.background) gamma[group] else gamma)
-  ifelse(conc>0,p*q,q)
+  linkp <- alpha[group]*(log(conc)-X%*%beta)+offset
+  switch(type,
+         link=linkp,
+         response=ifelse(conc>0,ilink(linkp),1)*ilink(if(!object$common.background) gamma[group] else gamma),
+         adjusted=ifelse(conc>0,ilink(linkp),1))
 }
 
 

@@ -4,7 +4,8 @@
 \alias{predict.lcx}
 \title{Predict method for LCx fits}
 \usage{
-\method{predict}{lcx}(object, newdata, type = c("response", "adjusted"), ...)
+\method{predict}{lcx}(object, newdata, type = c("response", "adjusted",
+  "link"), ...)
 }
 \arguments{
 \item{object}{An object of class \code{lcx}, obtained as the
@@ -32,5 +33,7 @@ Predict survival rates from a fitted LCx object.
 If \code{newdata} is omitted the predictions are based on the data
 used for the fit.  For \code{type="adjusted"}, it is assumed there
 is no background mortality and predictions are made based purely
-on the mortality due to the toxin.
+on the mortality due to the toxin. For \code{type="link"},
+predictions are returned on the scale of the link function, again
+ignoring any background mortality.
 }

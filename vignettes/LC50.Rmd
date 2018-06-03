@@ -162,12 +162,9 @@ grid.arrange(
 Alternately the **effects** package can be used to construct a
 graphical summary of the relation between LC50 and the additional
 stressors.
-
-**Effects support currently broken for effects version 4**
-```{r,eval=FALSE,fig.width=7,fig.height=6}
+```{r,fig.width=7,fig.height=6}
 library(effects)
-plot(Effect(c("salinity","temperature"),fit,
-            transformation=list(link=log,inverse=exp)))
+plot(Effect(c("salinity","temperature"),fit))
 ```
 
 
@@ -182,7 +179,8 @@ ggplot(toxicity,aes(x=conc,y=alive/total,colour=group))+
   geom_point()+
   geom_line(aes(x=conc,y=survival,colour=group),data=d.pr)+
   geom_vline(aes(xintercept=LC50,colour=group),data=d.lc50)+
-  geom_rect(aes(x=Estimate,y=0,xmin=`Lwr 95%`,xmax=`Upr 95%`,ymin=0,ymax=1,fill=group),data=d.lc50,alpha=0.2,color=NA)+
+  geom_rect(aes(xmin=`Lwr 95%`,xmax=`Upr 95%`,ymin=0,ymax=1,fill=group),
+            inherit.aes=FALSE,data=d.lc50,alpha=0.2,color=NA)+
   facet_grid(temperature~salinity)
 ```
 

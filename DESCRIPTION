@@ -9,7 +9,6 @@ Authors@R: as.person(c(
 Depends:
     R(>= 3.2.0)
 Suggests:
-    effects,
     ggplot2,
     gridExtra,
     knitr,
@@ -17,6 +16,8 @@ Suggests:
     multcomp,
     rjags
 Imports:
+    effects,
+    estimability,
     stats,
     MASS
 Description: Provides facilities for estimating lethal concentrations
@@ -27,4 +28,4 @@ ByteCompile: yes
 License: GPL-3
 LazyData: TRUE
 VignetteBuilder: knitr
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
